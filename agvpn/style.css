@@ -1,0 +1,741 @@
+/* AdGuard VPN GUI — dark, calm, mint accent. */
+
+* {
+    font-family: "Ubuntu", "Noto Sans", sans-serif;
+}
+
+window,
+dialog {
+    background-color: #0b1412;
+    color: #e9f5f0;
+    font-size: 14px;
+}
+
+headerbar {
+    background-image: none;
+    background-color: #0b1412;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.055);
+    box-shadow: none;
+    min-height: 46px;
+    padding: 0 8px;
+}
+
+headerbar button {
+    background: none;
+    border: none;
+    box-shadow: none;
+    color: #a9bdb7;
+    border-radius: 8px;
+    padding: 5px;
+}
+
+headerbar button:hover {
+    background-color: rgba(255, 255, 255, 0.06);
+    color: #eaf6f1;
+}
+
+.sidebar {
+    background-color: #0a1310;
+    border-right: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.brand-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #f0faf6;
+}
+
+.brand-sub {
+    font-size: 11px;
+    color: #7d938c;
+}
+
+.power-button {
+    background: none;
+    background-image: none;
+    border: none;
+    box-shadow: none;
+    padding: 0;
+    margin: 0;
+    outline: none;
+}
+
+.power-button:hover {
+    background: none;
+}
+
+.status-title {
+    font-size: 17px;
+    font-weight: 700;
+    color: #eef9f4;
+}
+
+.status-sub {
+    font-size: 12.5px;
+    color: #8fa8a1;
+}
+
+.side-card {
+    background-color: #11201c;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 14px;
+    padding: 11px 12px;
+}
+
+button.side-card {
+    background-color: #11201c;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 14px;
+    padding: 11px 12px;
+    box-shadow: none;
+}
+
+button.side-card:hover {
+    background-color: #162a24;
+    border-color: rgba(79, 231, 174, 0.24);
+}
+
+button.side-card:active {
+    background-color: #132420;
+}
+
+.card {
+    background-color: #11201c;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 18px;
+    padding: 20px;
+}
+
+.card-flat {
+    background-color: rgba(255, 255, 255, 0.025);
+    border: 1px solid rgba(255, 255, 255, 0.055);
+    border-radius: 16px;
+    padding: 16px;
+}
+
+.hero {
+    background-image: linear-gradient(135deg, rgba(79, 231, 174, 0.13) 0%, rgba(17, 32, 28, 0.96) 55%, rgba(17, 32, 28, 0.94) 100%);
+    border: 1px solid rgba(79, 231, 174, 0.18);
+    border-radius: 20px;
+    padding: 22px;
+}
+
+.hero-off {
+    background-image: linear-gradient(135deg, rgba(140, 170, 158, 0.09) 0%, rgba(17, 32, 28, 0.96) 60%);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-radius: 20px;
+    padding: 22px;
+}
+
+.nav-list {
+    background: transparent;
+}
+
+.nav-list row {
+    background: transparent;
+    border-radius: 12px;
+    margin: 2px 10px;
+    padding: 9px 12px;
+    color: #a9bdb7;
+}
+
+.nav-list row:hover {
+    background-color: rgba(255, 255, 255, 0.045);
+    color: #eaf6f1;
+}
+
+.nav-list row:selected {
+    background-color: rgba(79, 231, 174, 0.13);
+    color: #f0faf6;
+}
+
+.nav-list row:selected image {
+    color: #5aecb3;
+}
+
+.nav-label {
+    font-size: 13.5px;
+    font-weight: 600;
+}
+
+.page-title {
+    font-size: 25px;
+    font-weight: 700;
+    color: #f2fbf7;
+}
+
+.page-sub {
+    font-size: 13px;
+    color: #8fa8a1;
+}
+
+.section-title {
+    font-size: 12px;
+    font-weight: 700;
+    color: #6fe3b6;
+    letter-spacing: 1.2px;
+}
+
+.eyebrow {
+    font-size: 11px;
+    font-weight: 700;
+    color: #6fe3b6;
+    letter-spacing: 1.4px;
+}
+
+.muted {
+    color: #8fa8a1;
+}
+
+.dim {
+    color: #6f847d;
+}
+
+.tiny {
+    font-size: 11.5px;
+}
+
+.small {
+    font-size: 12.5px;
+}
+
+.accent {
+    color: #4fe7ae;
+}
+
+.warn {
+    color: #ffcf70;
+}
+
+.danger {
+    color: #ff8b8b;
+}
+
+.title-strong {
+    font-weight: 700;
+    color: #f0faf6;
+}
+
+.value-strong {
+    font-size: 16px;
+    font-weight: 700;
+    color: #f0faf6;
+}
+
+.stat-value {
+    font-size: 19px;
+    font-weight: 700;
+    color: #f0faf6;
+}
+
+.pill {
+    background-color: rgba(255, 255, 255, 0.055);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 999px;
+    padding: 3px 10px;
+    font-size: 11.5px;
+    color: #b6c9c2;
+}
+
+.pill-accent {
+    background-color: rgba(79, 231, 174, 0.12);
+    border: 1px solid rgba(79, 231, 174, 0.22);
+    color: #6fe3b6;
+}
+
+.pill-warn {
+    background-color: rgba(255, 207, 112, 0.11);
+    border: 1px solid rgba(255, 207, 112, 0.22);
+    color: #ffcf70;
+}
+
+.pill-danger {
+    background-color: rgba(255, 107, 107, 0.11);
+    border: 1px solid rgba(255, 107, 107, 0.22);
+    color: #ff9d9d;
+}
+
+.ping-good {
+    color: #62e6ae;
+}
+
+.ping-mid {
+    color: #ffcf70;
+}
+
+.ping-bad {
+    color: #ff9d9d;
+}
+
+.ping-unknown {
+    color: #7d938c;
+}
+
+button.quick-hit {
+    background: none;
+    background-image: none;
+    border: none;
+    box-shadow: none;
+    padding: 0;
+}
+
+button.quick-hit:hover {
+    background: none;
+}
+
+.card-flat:hover {
+    background-color: rgba(255, 255, 255, 0.075);
+    border-color: rgba(79, 231, 174, 0.28);
+}
+
+button.primary {
+    background-image: linear-gradient(135deg, #55ecb2 0%, #1fae80 100%);
+    color: #04130e;
+    font-weight: 700;
+    border: none;
+    border-radius: 12px;
+    padding: 9px 18px;
+    box-shadow: 0 6px 18px rgba(31, 174, 128, 0.22);
+}
+
+button.primary:hover {
+    background-image: linear-gradient(135deg, #6bf4c1 0%, #25c08e 100%);
+    box-shadow: 0 8px 22px rgba(31, 174, 128, 0.3);
+}
+
+button.primary:active {
+    background-image: linear-gradient(135deg, #40d9a2 0%, #19996f 100%);
+}
+
+button.primary:disabled {
+    background-image: none;
+    background-color: rgba(255, 255, 255, 0.06);
+    color: #6f847d;
+    box-shadow: none;
+}
+
+button.ghost {
+    background-color: rgba(255, 255, 255, 0.045);
+    color: #d7e7e1;
+    border: 1px solid rgba(255, 255, 255, 0.085);
+    border-radius: 10px;
+    padding: 7px 13px;
+    box-shadow: none;
+}
+
+button.ghost:hover {
+    background-color: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.14);
+}
+
+button.danger {
+    background-color: rgba(255, 107, 107, 0.1);
+    color: #ff9d9d;
+    border: 1px solid rgba(255, 107, 107, 0.22);
+    border-radius: 10px;
+    padding: 7px 13px;
+    box-shadow: none;
+}
+
+button.danger:hover {
+    background-color: rgba(255, 107, 107, 0.17);
+}
+
+button.danger:disabled {
+    background-color: rgba(255, 255, 255, 0.035);
+    border-color: rgba(255, 255, 255, 0.05);
+    color: #6f847d;
+}
+
+button.primary:disabled,
+button.ghost:disabled {
+    opacity: 0.45;
+}
+
+button.flat {
+    background: none;
+    border: none;
+    box-shadow: none;
+    color: #a9bdb7;
+    padding: 6px;
+    border-radius: 8px;
+}
+
+button.flat:hover {
+    background-color: rgba(255, 255, 255, 0.06);
+    color: #eaf6f1;
+}
+
+entry {
+    background-color: #0a1411;
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    border-radius: 10px;
+    padding: 8px 11px;
+    color: #eaf6f1;
+    caret-color: #4fe7ae;
+}
+
+entry:focus {
+    border-color: rgba(79, 231, 174, 0.7);
+    box-shadow: 0 0 0 3px rgba(79, 231, 174, 0.11);
+}
+
+entry:disabled {
+    color: #6f847d;
+}
+
+entry.search {
+    padding-left: 12px;
+}
+
+combobox button {
+    background-color: #0a1411;
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    border-radius: 10px;
+    padding: 6px 10px;
+    color: #eaf6f1;
+    box-shadow: none;
+    min-height: 24px;
+}
+
+combobox button:hover {
+    border-color: rgba(79, 231, 174, 0.4);
+}
+
+combobox arrow {
+    color: #8fa8a1;
+    min-width: 14px;
+}
+
+menu {
+    background-color: #13231f;
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    border-radius: 10px;
+    padding: 6px;
+}
+
+menuitem {
+    border-radius: 7px;
+    padding: 5px 10px;
+    color: #d7e7e1;
+}
+
+menuitem:hover {
+    background-color: rgba(79, 231, 174, 0.12);
+    color: #f0faf6;
+}
+
+switch {
+    background-color: rgba(255, 255, 255, 0.12);
+    border-radius: 999px;
+    border: none;
+    min-width: 44px;
+    min-height: 24px;
+}
+
+switch:checked {
+    background-color: #1fae80;
+}
+
+switch slider {
+    background-color: #eaf6f1;
+    border-radius: 999px;
+    min-width: 20px;
+    min-height: 20px;
+    margin: 2px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+switch:disabled {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+checkbutton {
+    color: #b6c9c2;
+}
+
+checkbutton check {
+    background-color: #0a1411;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 5px;
+    min-width: 16px;
+    min-height: 16px;
+}
+
+checkbutton check:checked {
+    background-color: #1fae80;
+    border-color: #1fae80;
+    color: #04130e;
+}
+
+radiobutton {
+    color: #b6c9c2;
+}
+
+scrollbar {
+    background: transparent;
+    border: none;
+}
+
+scrollbar slider {
+    background-color: rgba(255, 255, 255, 0.12);
+    border-radius: 999px;
+    min-width: 6px;
+    min-height: 30px;
+    margin: 2px;
+}
+
+scrollbar slider:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+scrolledwindow undershoot,
+scrolledwindow overshoot {
+    background: none;
+}
+
+separator {
+    background-color: rgba(255, 255, 255, 0.06);
+    min-height: 1px;
+}
+
+.content-stack,
+.content-stack scrolledwindow,
+.content-stack viewport,
+.content-stack scrolledwindow > viewport {
+    background: transparent;
+}
+
+.content-stack,
+.content-scroll,
+.content-scroll > viewport,
+.content-scroll viewport {
+    background: transparent;
+}
+
+.app-dialog {
+    background-color: #0d1916;
+}
+
+.app-dialog .dialog-vbox {
+    background-color: #0d1916;
+}
+
+/* Locations */
+button.loc-row {
+    background-color: transparent;
+    background-image: none;
+    border: 1px solid transparent;
+    border-radius: 12px;
+    padding: 0;
+    box-shadow: none;
+}
+
+button.loc-row:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.055);
+}
+
+button.loc-row:active {
+    background-color: rgba(255, 255, 255, 0.035);
+}
+
+button.loc-row:disabled {
+    background-color: transparent;
+    opacity: 0.55;
+}
+
+.row-action {
+    background-color: rgba(255, 255, 255, 0.045);
+    border: 1px solid rgba(255, 255, 255, 0.085);
+    border-radius: 9px;
+    padding: 5px 12px;
+    color: #d7e7e1;
+    font-size: 12px;
+}
+
+button.loc-current {
+    background-color: rgba(79, 231, 174, 0.075);
+    border: 1px solid rgba(79, 231, 174, 0.24);
+}
+
+button.loc-current:hover {
+    background-color: rgba(79, 231, 174, 0.11);
+}
+
+
+
+.flag {
+    font-size: 21px;
+}
+
+.icon-badge {
+    background-color: rgba(79, 231, 174, 0.09);
+    border: 1px solid rgba(79, 231, 174, 0.12);
+    border-radius: 999px;
+    padding: 7px;
+}
+
+.flag-badge {
+    background-color: rgba(255, 255, 255, 0.045);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 999px;
+    padding: 5px 7px;
+}
+
+.loc-city {
+    font-size: 14px;
+    font-weight: 600;
+    color: #eef9f4;
+}
+
+.loc-country {
+    font-size: 11.5px;
+    color: #8fa8a1;
+}
+
+.country-head {
+    font-size: 11px;
+    font-weight: 700;
+    color: #6fe3b6;
+    letter-spacing: 1.2px;
+    padding: 14px 6px 4px 6px;
+}
+
+/* Settings */
+.setting-row {
+    padding: 13px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.setting-row.last {
+    border-bottom: none;
+}
+
+.setting-title {
+    font-size: 13.5px;
+    font-weight: 600;
+    color: #e9f5f0;
+}
+
+.setting-desc {
+    font-size: 11.5px;
+    color: #8fa8a1;
+}
+
+.seg-button {
+    background-color: transparent;
+    color: #a9bdb7;
+    border: none;
+    border-radius: 8px;
+    padding: 5px 12px;
+    box-shadow: none;
+    font-size: 12.5px;
+}
+
+.seg-button:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+.seg-button:checked {
+    background-color: rgba(79, 231, 174, 0.16);
+    color: #7af0c2;
+    font-weight: 700;
+}
+
+.seg-box {
+    background-color: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 10px;
+    padding: 3px;
+}
+
+/* Banners and toasts */
+.banner {
+    background-color: rgba(255, 107, 107, 0.075);
+    border: 1px solid rgba(255, 107, 107, 0.24);
+    border-radius: 14px;
+    padding: 12px 14px;
+}
+
+.banner-info {
+    background-color: rgba(79, 231, 174, 0.07);
+    border: 1px solid rgba(79, 231, 174, 0.2);
+    border-radius: 14px;
+    padding: 12px 14px;
+}
+
+.toast {
+    background-color: #162a24;
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    border-radius: 14px;
+    padding: 10px 14px;
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.42);
+    color: #eaf6f1;
+}
+
+.toast-error {
+    background-color: #2a1618;
+    border: 1px solid rgba(255, 107, 107, 0.28);
+}
+
+.toast-title {
+    font-weight: 700;
+    font-size: 13px;
+}
+
+.toast-body {
+    font-size: 12px;
+    color: #b6c9c2;
+}
+
+/* Account */
+.avatar {
+    background-image: linear-gradient(135deg, rgba(79, 231, 174, 0.25), rgba(31, 174, 128, 0.12));
+    border: 1px solid rgba(79, 231, 174, 0.32);
+    border-radius: 999px;
+    color: #7af0c2;
+    font-size: 22px;
+    font-weight: 700;
+}
+
+/* Generic spacing helpers */
+.space-4 { margin: 4px; }
+.space-8 { margin: 8px; }
+.space-12 { margin: 12px; }
+.space-16 { margin: 16px; }
+
+.empty-icon {
+    color: #4b6059;
+}
+
+.spinner {
+    color: #4fe7ae;
+}
+
+tooltip {
+    background-color: #16281f;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    color: #eaf6f1;
+    padding: 4px 8px;
+}
+
+/* Text view used for logs / technical details */
+textview,
+textview text {
+    background-color: #08110e;
+    color: #c8dbd4;
+    caret-color: #4fe7ae;
+}
+
+textview border {
+    background-color: #08110e;
+    border: none;
+}
+
+.popover {
+    background-color: #13231f;
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    border-radius: 12px;
+}

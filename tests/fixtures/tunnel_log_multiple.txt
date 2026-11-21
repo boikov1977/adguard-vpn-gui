@@ -1,0 +1,3 @@
+22.11.2026 00:24:34.822055 INFO  [112410] VPNCORE pinger_handler: [0] Using endpoint: name=cache-25.smart-pixl.net, address=201.8.95.149:443, relay=none, ping=231ms
+22.11.2026 00:25:10.000001 INFO  [112410] VPNCORE pinger_handler: [0] Using endpoint: name=cache-40.example.net, address=198.51.100.7:443, relay=eu-relay-1, ping=187ms
+22.11.2026 00:25:11.000001 INFO  [112410] VPNCORE raise_state: [0] VPN_SS_CONNECTED
