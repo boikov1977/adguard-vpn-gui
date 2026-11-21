@@ -15,7 +15,24 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
 from agvpn import pages  # noqa: E402
-from agvpn.pages import ExclusionsPage, exclusion_control_state  # noqa: E402
+from agvpn.pages import ExclusionsPage, exclusion_control_state, flow_columns  # noqa: E402
+
+
+class FlowColumnsTests(unittest.TestCase):
+    def test_wide_content_uses_four_columns(self):
+        self.assertEqual(flow_columns(820), 4)
+        self.assertEqual(flow_columns(1600), 4)
+
+    def test_laptop_content_uses_two_columns(self):
+        self.assertEqual(flow_columns(755), 2)
+        self.assertEqual(flow_columns(420), 2)
+
+    def test_very_narrow_content_uses_one_column(self):
+        self.assertEqual(flow_columns(419), 1)
+        self.assertEqual(flow_columns(360), 1)
+
+    def test_unknown_width_has_safe_default(self):
+        self.assertEqual(flow_columns(0), 2)
 
 
 class ExclusionControlStateTests(unittest.TestCase):

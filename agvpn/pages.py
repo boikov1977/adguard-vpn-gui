@@ -34,6 +34,49 @@ def exclusion_control_state(items: list[str], busy: bool) -> dict[str, bool]:
     }
 
 
+def flow_columns(width: int, min_wide_width: int = 820) -> int:
+    """Column count for responsive card rows at the given content width."""
+    if width <= 0:
+        return 2
+    if width < 420:
+        return 1
+    if width >= min_wide_width:
+        return 4
+    return 2
+
+
+def responsive_flow(min_wide_width: int = 820) -> Gtk.FlowBox:
+    """Homogeneous flow: 4 columns on wide content, 2 on narrow screens."""
+    flow = Gtk.FlowBox()
+    flow.set_selection_mode(Gtk.SelectionMode.NONE)
+    flow.set_homogeneous(True)
+    flow.set_column_spacing(12)
+    flow.set_row_spacing(12)
+    flow.set_min_children_per_line(1)
+    flow.set_max_children_per_line(4)
+    pending = {"columns": None}
+
+    def apply_columns():
+        columns = pending["columns"]
+        pending["columns"] = None
+        if columns and flow.get_max_children_per_line() != columns:
+            flow.set_min_children_per_line(1)
+            flow.set_max_children_per_line(columns)
+            flow.set_min_children_per_line(columns)
+        return False
+
+    def on_size_allocate(_widget, allocation):
+        if allocation.width <= 0:
+            return
+        columns = flow_columns(allocation.width, min_wide_width)
+        if columns != flow.get_max_children_per_line() and pending["columns"] != columns:
+            pending["columns"] = columns
+            GLib.idle_add(apply_columns)
+
+    flow.connect("size-allocate", on_size_allocate)
+    return flow
+
+
 class Page(Gtk.ScrolledWindow):
     def __init__(self, win, spacing: int = 18) -> None:
         super().__init__()
@@ -132,14 +175,14 @@ class DashboardPage(Page):
         self.body.pack_start(self.hero, False, False, 0)
 
         # Stats ----------------------------------------------------------------
-        stats_row = hbox(12)
         self.stat_session = StatTile("preferences-system-time-symbolic", "Сессия", "—")
         self.stat_protocol = StatTile("network-wireless-symbolic", "Протокол", "Авто")
         self.stat_mode = StatTile("security-high-symbolic", "Режим", "TUN")
         self.stat_dns = StatTile("network-server-symbolic", "DNS", "AdGuard")
+        stats_row = responsive_flow()
         for stat in (self.stat_session, self.stat_protocol, self.stat_mode, self.stat_dns):
             stat.set_hexpand(True)
-            stats_row.pack_start(stat, True, True, 0)
+            stats_row.add(stat)
         self.body.pack_start(stats_row, False, False, 0)
 
         # Quick locations ------------------------------------------------------
@@ -147,8 +190,7 @@ class DashboardPage(Page):
         quick_head.pack_start(section_label("Ближайшие локации"), False, False, 0)
         quick_head.pack_end(self._link_button("Все локации", "locations"), False, False, 0)
         self.body.pack_start(quick_head, False, False, 0)
-        self.quick_container = hbox(12)
-        self.quick_container.set_homogeneous(True)
+        self.quick_container = responsive_flow()
         self.body.pack_start(self.quick_container, False, False, 0)
 
         # Activity -------------------------------------------------------------
@@ -318,7 +360,7 @@ class DashboardPage(Page):
         if not fastest:
             placeholder = label("Локации загрузятся, как только CLI ответит.", "muted small")
             placeholder.set_margin_top(4)
-            self.quick_container.pack_start(placeholder, False, False, 0)
+            self.quick_container.add(placeholder)
             self.quick_container.show_all()
             return
         for loc in fastest:
@@ -342,7 +384,8 @@ class DashboardPage(Page):
             btn.add(child)
             btn.set_tooltip_text(f"{loc.title}, {loc.country}\n{util.ESTIMATE_TOOLTIP}")
             btn.connect("clicked", lambda _b, location=loc: self.win.connect_to(location))
-            self.quick_container.pack_start(btn, True, True, 0)
+            btn.set_hexpand(True)
+            self.quick_container.add(btn)
         self.quick_container.show_all()
 
     def _refresh_activity(self) -> None:

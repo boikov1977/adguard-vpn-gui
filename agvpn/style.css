@@ -39,6 +39,24 @@ headerbar button:hover {
     border-right: 1px solid rgba(255, 255, 255, 0.05);
 }
 
+/* Compact sidebar for laptop screens (height < 820 px). */
+.sidebar.compact .side-card {
+    padding: 8px 11px;
+}
+
+.sidebar.compact .nav-list row {
+    margin: 1px 10px;
+    padding: 5px 12px;
+}
+
+.sidebar.compact .status-title {
+    font-size: 16px;
+}
+
+.sidebar.compact .status-sub {
+    font-size: 12px;
+}
+
 .brand-title {
     font-size: 16px;
     font-weight: 700;

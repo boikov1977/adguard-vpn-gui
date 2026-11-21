@@ -157,6 +157,19 @@ class AdGuardApplication(Gtk.Application):
 
 
 class MainWindow(Gtk.ApplicationWindow):
+    @staticmethod
+    def _get_workarea() -> Gdk.Rectangle | None:
+        try:
+            display = Gdk.Display.get_default()
+            if display is None:
+                return None
+            monitor = display.get_primary_monitor() or display.get_monitor(0)
+            if monitor is None:
+                return None
+            return monitor.get_workarea()
+        except Exception:
+            return None
+
     def __init__(self, app: AdGuardApplication, start_hidden: bool = False) -> None:
         super().__init__(application=app, title=util.APP_NAME)
         self.app = app
@@ -220,6 +233,8 @@ class MainWindow(Gtk.ApplicationWindow):
         self._tray_status = None
         self._tray_fastest = None
         self._last_page = "dashboard"
+        self._workarea = self._get_workarea()
+        self._compact = self._workarea is not None and self._workarea.height < 800
 
         for raw in self.loc_cache.items:
             try:
@@ -233,8 +248,14 @@ class MainWindow(Gtk.ApplicationWindow):
         self._start_timers()
 
         self.set_wmclass("AdGuardVPNGui", "AdGuardVPNGui")
-        self.set_size_request(980, 650)
+        self.set_size_request(980, 560)
         width, height = self.store.window_size
+        if self._workarea is not None:
+            # set_default_size() excludes the CSD headerbar, and shadows are
+            # drawn outside the window; reserve both so the whole window fits
+            # the usable screen and window managers allow maximizing.
+            width = min(width, max(760, self._workarea.width - 56))
+            height = min(height, max(520, self._workarea.height - 104))
         self.set_default_size(width, height)
         self.set_position(Gtk.WindowPosition.CENTER)
         try:
@@ -253,7 +274,7 @@ class MainWindow(Gtk.ApplicationWindow):
         body = hbox(0)
         self.sidebar = self._build_sidebar()
         self.sidebar.set_hexpand(False)
-        body.pack_start(self.sidebar, False, False, 0)
+        body.pack_start(self.sidebar, False, True, 0)
         body.pack_start(self._build_content(), True, True, 0)
         self.add(body)
 
@@ -333,9 +354,9 @@ class MainWindow(Gtk.ApplicationWindow):
     def _build_sidebar(self) -> Gtk.Widget:
         side = vbox(0)
         side.set_size_request(304, -1)
-        side.get_style_context().add_class("sidebar")
 
         brand = hbox(10)
+        self._brand = brand
         brand.set_margin_top(18)
         brand.set_margin_bottom(4)
         brand.set_margin_start(18)
@@ -355,6 +376,7 @@ class MainWindow(Gtk.ApplicationWindow):
         side.pack_start(brand, False, False, 0)
 
         power_wrap = vbox(2)
+        self._power_wrap = power_wrap
         power_wrap.set_margin_top(8)
         power_wrap.set_halign(Gtk.Align.CENTER)
         self.power = PowerButton()
@@ -454,7 +476,50 @@ class MainWindow(Gtk.ApplicationWindow):
         side.pack_start(self.side_version, False, False, 0)
 
         self.nav.select_row(self._nav_rows["dashboard"])
-        return side
+
+        # The sidebar must be allowed to shrink: otherwise its minimum height
+        # becomes the window minimum and window managers refuse to maximize.
+        scroll = Gtk.ScrolledWindow()
+        scroll.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
+        scroll.set_hexpand(False)
+        scroll.set_size_request(304, -1)
+        scroll.get_style_context().add_class("sidebar")
+        scroll.add(side)
+        self._sidebar_scroll = scroll
+        self._set_sidebar_compact(self._compact)
+        return scroll
+
+    def _set_sidebar_compact(self, compact: bool) -> None:
+        if getattr(self, "_sidebar_compact", None) == compact:
+            return
+        self._sidebar_compact = compact
+        self._compact = compact
+        scroll = getattr(self, "_sidebar_scroll", None)
+        if scroll is None:
+            return
+        ctx = scroll.get_style_context()
+        if compact:
+            ctx.add_class("compact")
+        else:
+            ctx.remove_class("compact")
+        size = 140 if compact else 176
+        self.power.set_size_request(size, size)
+        self._brand.set_margin_top(10 if compact else 18)
+        self._brand.set_margin_bottom(2 if compact else 4)
+        self._power_wrap.set_margin_top(4 if compact else 8)
+        self.location_btn.set_margin_top(6 if compact else 12)
+        self.nav.set_margin_top(6 if compact else 12)
+        self.account_btn.set_margin_bottom(4 if compact else 6)
+        self.side_version.set_margin_bottom(6 if compact else 10)
+
+    def _update_layout(self) -> None:
+        height = self.get_allocated_height()
+        if height <= 200:
+            return
+        # Window allocation includes CSD shadows (52 px) and the headerbar
+        # (47 px); the rest is available to the sidebar/page body.
+        body_height = height - 99
+        self._set_sidebar_compact(body_height < 700)
 
     def _build_content(self) -> Gtk.Widget:
         right = vbox(0)
@@ -658,8 +723,9 @@ class MainWindow(Gtk.ApplicationWindow):
             return
         if content_width <= 0:
             return
+        base = 22 if content_width < 780 else 30
         extra = max(0, (content_width - 1240) // 2)
-        margin = 30 + extra
+        margin = base + extra
         if os.environ.get("AGVPN_GUI_DEBUG"):
             try:
                 self.dashboard.body.queue_resize()
@@ -682,6 +748,7 @@ class MainWindow(Gtk.ApplicationWindow):
     def _on_configure(self, *_args) -> bool:
         if self._shutting_down:
             return False
+        self._update_layout()
         self._adapt_page_margins()
         if self._geom_timer:
             try:
