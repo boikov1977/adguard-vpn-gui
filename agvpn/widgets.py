@@ -12,7 +12,7 @@ gi.require_version("Gdk", "3.0")
 gi.require_version("Pango", "1.0")
 from gi.repository import Gdk, GLib, Gtk, Pango  # noqa: E402
 
-from . import util  # noqa: E402
+from . import pings, util  # noqa: E402
 
 ACCENT = (0.31, 0.906, 0.682)          # #4fe7ae
 ACCENT_DARK = (0.07, 0.55, 0.38)
@@ -350,7 +350,9 @@ class LocationRow(Gtk.Button):
     def __init__(self, loc, *, current: bool = False, connected: bool = False,
                  busy: bool = False, on_activate=None, real_ping: int | None = None,
                  endpoint_name: str | None = None,
-                 measured_at=None) -> None:
+                 measured_at=None, history_ping: int | None = None,
+                 history_measured_at=None, history_endpoint: str | None = None,
+                 history_address: str | None = None) -> None:
         super().__init__()
         self.location = loc
         self._on_activate = on_activate
@@ -398,6 +400,19 @@ class LocationRow(Gtk.Button):
                             "нет записи о выбранном сервере. Оценка AdGuard "
                             "не подставляется.")
             ping_class = util.ping_class(real_ping)
+        elif history_ping is not None:
+            # A previously visited location: the last real measurement, always
+            # with its date.  This is never the AdGuard estimate.
+            ping_text = pings.history_text(history_ping, history_measured_at)
+            ping_tip = f"Последний реальный замер: {util.human_ping(history_ping)}"
+            measured = util.measured_at_text(history_measured_at)
+            if measured:
+                ping_tip += f"\nЗамер: {measured}"
+            if history_endpoint:
+                ping_tip += f"\nСервер: {history_endpoint}"
+            if history_address:
+                ping_tip += f"\nАдрес: {history_address}"
+            ping_class = util.ping_class(history_ping)
         else:
             ping_text = util.human_estimate(loc.ping)
             ping_tip = util.ESTIMATE_TOOLTIP
@@ -408,10 +423,21 @@ class LocationRow(Gtk.Button):
             real_tag.set_valign(Gtk.Align.CENTER)
             real_tag.set_tooltip_text(ping_tip)
             ping_group.pack_start(real_tag, False, False, 0)
-        ping = label(ping_text, f"small {ping_class}")
-        ping.set_valign(Gtk.Align.CENTER)
-        ping.set_tooltip_text(ping_tip)
-        ping_group.pack_start(ping, False, False, 0)
+        if history_ping is not None and not (current and connected):
+            group = vbox(0)
+            group.set_valign(Gtk.Align.CENTER)
+            ping = label(ping_text, f"small {ping_class}", xalign=1.0)
+            ping.set_tooltip_text(ping_tip)
+            group.pack_start(ping, False, False, 0)
+            caption = label("последний замер", "tiny muted", xalign=1.0)
+            caption.set_tooltip_text(ping_tip)
+            group.pack_start(caption, False, False, 0)
+            ping_group.pack_start(group, False, False, 0)
+        else:
+            ping = label(ping_text, f"small {ping_class}")
+            ping.set_valign(Gtk.Align.CENTER)
+            ping.set_tooltip_text(ping_tip)
+            ping_group.pack_start(ping, False, False, 0)
         ping_group.set_margin_end(6)
         outer.pack_end(ping_group, False, False, 0)
 

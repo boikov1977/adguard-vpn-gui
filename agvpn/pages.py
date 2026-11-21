@@ -10,7 +10,7 @@ gi.require_version("Gtk", "3.0")
 gi.require_version("Pango", "1.0")
 from gi.repository import GLib, Gtk, Pango  # noqa: E402
 
-from . import cli, locations, util  # noqa: E402
+from . import blocklist, cli, locations, util  # noqa: E402
 from .widgets import (  # noqa: E402
     ActivityItem, EmptyState, LocationRow, SegmentedControl, StatTile,
     card, hbox, icon, label, page_header, pill, section_label, setting_row,
@@ -461,8 +461,18 @@ class LocationsPage(Page):
                 or needle in loc.iso.lower()
             ]
         self.count_label.set_text(f"{len(items)} из {len(self.win.locations)}")
+        rows = []
+        for loc in items:
+            is_current = bool(connected and locations.same_location(loc, current))
+            history = None if is_current else self.win.endpoint_history.get(loc)
+            rows.append((loc, is_current, history))
         signature = (
-            tuple((l.iso, l.city, l.ping) for l in items),
+            tuple(
+                (loc.iso, loc.city, loc.ping,
+                 history.ping if history else None,
+                 history.measured_at.isoformat() if history else None)
+                for loc, _is_current, history in rows
+            ),
             (current.iso, current.city) if current else None,
             connected, busy, real_ping, endpoint_name, measured_at,
         )
@@ -478,8 +488,7 @@ class LocationsPage(Page):
             )
             self.list_container.show_all()
             return
-        for loc in items:
-            is_current = bool(connected and locations.same_location(loc, current))
+        for loc, is_current, history in rows:
             row = LocationRow(
                 loc,
                 current=is_current,
@@ -489,6 +498,10 @@ class LocationsPage(Page):
                 real_ping=real_ping if is_current else None,
                 endpoint_name=endpoint_name if is_current else None,
                 measured_at=measured_at if is_current else None,
+                history_ping=history.ping if history else None,
+                history_measured_at=history.measured_at if history else None,
+                history_endpoint=history.endpoint if history else None,
+                history_address=history.address if history else None,
             )
             self.list_container.pack_start(row, False, False, 0)
         self.list_container.show_all()
@@ -513,6 +526,8 @@ class ExclusionsPage(Page):
         self._mode = "general"
         self._items: list[str] = []
         self._row_buttons: list[Gtk.Button] = []
+        self._blocklist = None
+        self._blocklist_busy: str | None = None
 
         refresh = Gtk.Button()
         refresh.set_image(icon("view-refresh-symbolic", 16))
@@ -559,6 +574,54 @@ class ExclusionsPage(Page):
         )
         self.body.pack_start(add_card, False, False, 0)
 
+        block_card = card(spacing=10)
+        block_card.pack_start(
+            label("Список сайтов, не любящих VPN", "title-strong"), False, False, 0
+        )
+        block_card.pack_start(
+            label("VPN защищает весь трафик, а сайты из списка открываются напрямую. "
+                  "Это нужно сервисам, которые не любят иностранные IP (например, ozon.ru). "
+                  "Источник — список UnRKN.", "small muted", wrap=True, max_width=78),
+            False, False, 0,
+        )
+        self.blocklist_status = label("Список не загружен.", "small muted", wrap=True, max_width=78)
+        block_card.pack_start(self.blocklist_status, False, False, 0)
+        self.blocklist_hint = label(
+            "Сейчас выборочный режим: при применении будет включён общий, "
+            "иначе сайты из списка пойдут через VPN.", "tiny warn", wrap=True, max_width=78
+        )
+        self.blocklist_hint.set_no_show_all(True)
+        self.blocklist_hint.set_visible(False)
+        block_card.pack_start(self.blocklist_hint, False, False, 0)
+        self.blocklist_progress = Gtk.ProgressBar()
+        self.blocklist_progress.set_show_text(True)
+        self.blocklist_progress.set_no_show_all(True)
+        self.blocklist_progress.set_visible(False)
+        block_card.pack_start(self.blocklist_progress, False, False, 0)
+        block_buttons = hbox(8)
+        self.blocklist_download_btn = Gtk.Button(label="Загрузить с GitHub")
+        self.blocklist_download_btn.set_tooltip_text(
+            "Скачать список UnRKN с GitHub. Приложение не обновляет его в фоне."
+        )
+        self.blocklist_download_btn.connect("clicked", lambda *_: self.win.download_blocklist())
+        block_buttons.pack_start(self.blocklist_download_btn, False, False, 0)
+        self.blocklist_apply_btn = Gtk.Button(label="Применить")
+        self.blocklist_apply_btn.get_style_context().add_class("primary")
+        self.blocklist_apply_btn.set_tooltip_text(
+            "Добавить сайты в исключения общего режима: они будут открываться напрямую."
+        )
+        self.blocklist_apply_btn.connect("clicked", lambda *_: self.win.apply_blocklist())
+        block_buttons.pack_start(self.blocklist_apply_btn, False, False, 0)
+        self.blocklist_cancel_btn = Gtk.Button(label="Отмена")
+        self.blocklist_cancel_btn.get_style_context().add_class("danger")
+        self.blocklist_cancel_btn.set_no_show_all(True)
+        self.blocklist_cancel_btn.set_visible(False)
+        self.blocklist_cancel_btn.connect("clicked", lambda *_: self.win.cancel_blocklist())
+        block_buttons.pack_end(self.blocklist_cancel_btn, False, False, 0)
+        block_card.pack_start(block_buttons, False, False, 0)
+        self.body.pack_start(block_card, False, False, 0)
+        self.blocklist_card = block_card
+
         list_card = card(spacing=10)
         list_head = hbox(8)
         self.count = label("Список пуст", "title-strong")
@@ -582,6 +645,7 @@ class ExclusionsPage(Page):
         self._update_controls()
 
     def shown(self) -> None:
+        self.win.load_blocklist_cache()
         if not self._loaded:
             self.win.load_exclusions()
 
@@ -601,6 +665,10 @@ class ExclusionsPage(Page):
             self.mode_desc.set_text(
                 "Общий: VPN защищает весь трафик, кроме сайтов из списка исключений."
             )
+        if hasattr(self, "blocklist_hint"):
+            self.blocklist_hint.set_visible(
+                bool(self._blocklist) and self._mode != "general"
+            )
 
     def set_data(self, mode: str, items: list[str]) -> None:
         self._loaded = True
@@ -609,6 +677,76 @@ class ExclusionsPage(Page):
         self._update_mode_text()
         self._items = list(items)
         self._render()
+
+    # -- UnRKN blocklist -----------------------------------------------------
+    def set_blocklist(self, data) -> None:
+        """Show the cached/downloaded list; ``None`` means not downloaded."""
+        self._blocklist = data
+        self._render_blocklist()
+
+    def _render_blocklist(self) -> None:
+        data = self._blocklist
+        if data is not None:
+            text = (f"{data.count} доменов · загружен "
+                    f"{blocklist.fetched_text(data.fetched_at)}")
+            if data.raw_count and data.raw_count != data.count:
+                text += f" (из {data.raw_count} в источнике)"
+            self.blocklist_status.set_text(text)
+            self.blocklist_status.set_tooltip_text(
+                f"Источник: {data.source}\n"
+                "Если у бренда есть домен .ru, остальные зоны отброшены."
+            )
+            self.blocklist_download_btn.set_label("Обновить")
+        else:
+            self.blocklist_status.set_text(
+                "Список не загружен. Нажмите «Загрузить с GitHub» — "
+                "приложение не обновляет его в фоне."
+            )
+            self.blocklist_status.set_tooltip_text("")
+            self.blocklist_download_btn.set_label("Загрузить с GitHub")
+        self.blocklist_hint.set_visible(bool(data) and self._mode != "general")
+        self._update_blocklist_buttons()
+
+    def _update_blocklist_buttons(self) -> None:
+        if not hasattr(self, "blocklist_download_btn"):
+            return
+        busy = self._blocklist_busy is not None
+        self.blocklist_download_btn.set_sensitive(not busy and not self._busy)
+        self.blocklist_apply_btn.set_sensitive(
+            bool(self._blocklist) and not busy and not self._busy
+        )
+        applying = self._blocklist_busy == "apply"
+        self.blocklist_cancel_btn.set_visible(applying)
+        self.blocklist_cancel_btn.set_sensitive(applying)
+
+    def set_blocklist_busy(self, kind: str | None, done: int = 0,
+                           total: int = 0) -> None:
+        self._blocklist_busy = kind
+        if kind == "download":
+            self.blocklist_progress.set_visible(False)
+            self.blocklist_status.set_text("Загружаем список с GitHub…")
+        elif kind == "apply":
+            self.blocklist_progress.set_visible(True)
+            self.set_blocklist_progress(done, total)
+        else:
+            self.blocklist_progress.set_visible(False)
+            self._render_blocklist()
+        self._update_blocklist_buttons()
+
+    def set_blocklist_progress(self, done: int, total: int) -> None:
+        if self._blocklist_busy != "apply":
+            return
+        total = max(total, 0)
+        fraction = (done / total) if total else 0.0
+        self.blocklist_progress.set_fraction(min(max(fraction, 0.0), 1.0))
+        self.blocklist_progress.set_text(f"{done} из {total}")
+        self.blocklist_status.set_text(f"Добавляем сайты: {done} из {total}…")
+
+    def mark_blocklist_cancelled(self) -> None:
+        if self._blocklist_busy != "apply":
+            return
+        self.blocklist_status.set_text("Останавливаем после текущей партии…")
+        self.blocklist_cancel_btn.set_sensitive(False)
 
     def _render(self) -> None:
         for child in list(self.items_box.get_children()):
@@ -677,6 +815,8 @@ class ExclusionsPage(Page):
         for btn in self._row_buttons:
             btn.set_sensitive(state["rows"])
         self.add_btn.set_label("Добавляем…" if self._busy else "Добавить")
+        if hasattr(self, "blocklist_download_btn"):
+            self._update_blocklist_buttons()
 
     def set_busy(self, busy: bool) -> None:
         self._busy = busy

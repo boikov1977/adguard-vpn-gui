@@ -17,7 +17,7 @@ from pathlib import Path
 
 APP_NAME = "AdGuard VPN"
 APP_ID = "adguard-vpn-gui"
-APP_VERSION = "1.0.0"
+APP_VERSION = "1.1.0"
 
 PKG_DIR = Path(__file__).resolve().parent
 ASSETS_DIR = PKG_DIR / "assets"

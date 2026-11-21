@@ -746,11 +746,14 @@ class AdGuardCLI:
         self._raise_for_output(result)
         return result
 
-    def add_exclusions(self, domains: list[str], mode: str | None = None, timeout: float = 45) -> CliResult:
+    def add_exclusions(self, domains: list[str], mode: str | None = None,
+                       timeout: float = 45,
+                       cancel_event: threading.Event | None = None) -> CliResult:
+        raise_if_cancelled(cancel_event)
         args = ["site-exclusions", "add", " ".join(domains)]
         if mode:
             args += ["--for-mode", mode]
-        result = self._run(args, timeout=timeout)
+        result = self._run(args, timeout=timeout, cancel_event=cancel_event)
         low = result.text.lower()
         if result.code != 0 or "successfully added" not in low:
             raise CliError("Could not add exclusions", kind="unknown", result=result)
@@ -766,11 +769,13 @@ class AdGuardCLI:
             raise CliError("Could not remove exclusions", kind="unknown", result=result)
         return result
 
-    def clear_exclusions(self, mode: str | None = None, timeout: float = 45) -> CliResult:
+    def clear_exclusions(self, mode: str | None = None, timeout: float = 45,
+                         cancel_event: threading.Event | None = None) -> CliResult:
+        raise_if_cancelled(cancel_event)
         args = ["site-exclusions", "clear"]
         if mode:
             args += ["--for-mode", mode]
-        result = self._run(args, timeout=timeout)
+        result = self._run(args, timeout=timeout, cancel_event=cancel_event)
         if result.code != 0:
             raise CliError("Could not clear exclusions", kind="unknown", result=result)
         return result

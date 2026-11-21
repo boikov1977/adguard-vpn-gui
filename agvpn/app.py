@@ -24,7 +24,7 @@ try:
 except Exception:
     NOTIFY_OK = False
 
-from . import cli, locations, tunnel, util  # noqa: E402
+from . import blocklist, cli, locations, pings, tunnel, util  # noqa: E402
 from .cli import AdGuardCLI, CliError, License, Location, VpnStatus, needs_reconnect  # noqa: E402
 from .pages import (  # noqa: E402
     AccountPage, DashboardPage, ExclusionsPage, LocationsPage, SettingsPage,
@@ -164,6 +164,7 @@ class MainWindow(Gtk.ApplicationWindow):
         self.store = app.store
         self.loc_cache = app.locations_cache
         self.endpoint_cache = tunnel.EndpointCache()
+        self.endpoint_history = pings.EndpointHistory()
         self._start_hidden = start_hidden
         self._hidden_to_tray = False
         self._shown_once = False
@@ -184,6 +185,10 @@ class MainWindow(Gtk.ApplicationWindow):
         self.exclusion_mode = "general"
         self.exclusions: list[str] = []
         self._exclusions_loaded = False
+        self.blocklist = None
+        self._blocklist_loaded = False
+        self._blocklist_op = False
+        self._blocklist_cancel: threading.Event | None = None
 
         self.busy = False
         self.busy_kind: str | None = None
@@ -600,7 +605,7 @@ class MainWindow(Gtk.ApplicationWindow):
     def request_quit(self) -> None:
         if self._shutting_down:
             return
-        if self.busy:
+        if self.busy or self._blocklist_op:
             self.show_window(hidden=False)
             if not self.confirm(
                 "Операция выполняется",
@@ -615,6 +620,8 @@ class MainWindow(Gtk.ApplicationWindow):
             return
         self._shutting_down = True
         self._alive = False
+        if self._blocklist_cancel is not None:
+            self._blocklist_cancel.set()
         for timer_name in ("_poll_timer", "_session_timer", "_geom_timer"):
             timer = getattr(self, timer_name, None)
             if timer:
@@ -858,6 +865,7 @@ class MainWindow(Gtk.ApplicationWindow):
             if self.store.connected_since is None:
                 self.store.set_connected_since(time.time())
             self._maybe_remember_status_location(status)
+            self._remember_endpoint()
         elif new_state == "disconnected":
             if self.store.connected_since is not None:
                 self.store.set_connected_since(None)
@@ -932,6 +940,23 @@ class MainWindow(Gtk.ApplicationWindow):
     def real_endpoint(self):
         """Last endpoint from tunnel.log, cached by (mtime, size)."""
         return self.endpoint_cache.get()
+
+    def _remember_endpoint(self) -> None:
+        """Store the current real measurement for the connected location (T-40)."""
+        if not (self.status.location or "").strip():
+            # Without a location in the status line, ``current_location()``
+            # would fall back to the last used location and attribute a fresh
+            # measurement to a server we are not actually connected to.
+            return
+        endpoint = self.real_endpoint()
+        if endpoint is None:
+            return
+        loc = self.current_location()
+        if loc is None or not loc.iso:
+            return
+        if self.endpoint_history.record(loc, endpoint):
+            log.info("Recorded endpoint ping for %s: %s ms (%s)",
+                     self._location_name(loc), endpoint.ping, endpoint.name)
 
     def current_location(self) -> Location | None:
         last = self.store.last_location
@@ -1698,6 +1723,259 @@ class MainWindow(Gtk.ApplicationWindow):
     # ------------------------------------------------------------------
     # Exclusions
     # ------------------------------------------------------------------
+    def load_blocklist_cache(self) -> None:
+        """Show the last downloaded UnRKN list without touching the network."""
+        if self._blocklist_loaded:
+            return
+        self._blocklist_loaded = True
+        self.blocklist = blocklist.load_cache()
+        self.exclusions_page.set_blocklist(self.blocklist)
+
+    def download_blocklist(self) -> None:
+        if self._blocklist_op:
+            return
+        self._blocklist_op = True
+        self.exclusions_page.set_blocklist_busy("download")
+
+        def job():
+            data = blocklist.fetch()
+            try:
+                blocklist.save_cache(data)
+            except Exception:
+                log.warning("Could not save blocklist cache", exc_info=True)
+            return data
+
+        def done(data) -> None:
+            self._blocklist_op = False
+            self.blocklist = data
+            self._blocklist_loaded = True
+            self.exclusions_page.set_blocklist(data)
+            self.exclusions_page.set_blocklist_busy(None)
+            self.toast(
+                "Список загружен",
+                f"{data.count} доменов" + (
+                    f" из {data.raw_count}" if data.raw_count != data.count else ""
+                ) + ". Нажмите «Применить», чтобы добавить их в исключения.",
+                error=False,
+            )
+            self.store.add_activity("settings", "Загружен список UnRKN",
+                                    f"{data.count} доменов")
+
+        def failed(err: Exception) -> None:
+            self._blocklist_op = False
+            self.exclusions_page.set_blocklist_busy(None)
+            title = "Не удалось загрузить список"
+            if isinstance(err, blocklist.BlocklistError):
+                hint, details = str(err), err.details
+            else:
+                hint, details = ("Проверьте интернет-соединение и повторите попытку.",
+                                 traceback.format_exc())
+            self.show_error(title, hint, details)
+
+        self.run_async(job, done, failed)
+
+    def apply_blocklist(self) -> None:
+        if self._blocklist_op or self._excl_op or self.busy:
+            self.toast("Подождите", "Сейчас выполняется другая операция.", error=True)
+            return
+        data = self.blocklist
+        if data is None:
+            self.toast("Список не загружен",
+                       "Сначала нажмите «Загрузить с GitHub».", error=True)
+            return
+        if not self._exclusions_loaded:
+            self.toast("Список ещё загружается",
+                       "Дождитесь загрузки текущих исключений и повторите.", error=True)
+            return
+        if self.exclusion_mode != "general":
+            if not self.confirm(
+                "Включить общий режим?",
+                "Список UnRKN предназначен для общего режима: VPN защищает весь "
+                "трафик, а сайты из списка открываются напрямую. Сейчас включён "
+                "выборочный режим — при применении он будет заменён на общий.",
+                "Переключить и применить",
+            ):
+                return
+            action = "merge"
+        elif self.exclusions:
+            action = self._confirm_blocklist_action(data.count, len(self.exclusions))
+            if action is None:
+                return
+        else:
+            if not self.confirm(
+                "Добавить сайты в исключения?",
+                f"Будет добавлено {data.count} сайтов в общем режиме. "
+                "VPN продолжит защищать весь остальной трафик.",
+                "Добавить",
+            ):
+                return
+            action = "merge"
+        self._start_blocklist_apply(data, action)
+
+    def _confirm_blocklist_action(self, new_count: int, existing_count: int) -> str | None:
+        dialog = Gtk.Dialog(title="Применить список?", transient_for=self, modal=True)
+        dialog.get_style_context().add_class("app-dialog")
+        dialog.set_default_size(520, -1)
+        content = dialog.get_content_area()
+        content.set_margin_top(20)
+        content.set_margin_bottom(12)
+        content.set_margin_start(20)
+        content.set_margin_end(20)
+        content.set_spacing(10)
+        content.pack_start(
+            label("Применить список?", "title-strong", wrap=True, max_width=52),
+            False, False, 0,
+        )
+        content.pack_start(
+            label(
+                f"В списке {new_count} доменов, в общем режиме сейчас "
+                f"{existing_count} исключений.\n\n"
+                "«Добавить к текущим» сохранит ваши сайты и пропустит уже "
+                "добавленные. «Заменить список» удалит текущие исключения, "
+                "включая добавленные вручную.",
+                "small muted", wrap=True, max_width=58,
+            ),
+            False, False, 0,
+        )
+        dialog.add_button("Отмена", Gtk.ResponseType.CANCEL)
+        replace = dialog.add_button("Заменить список", Gtk.ResponseType.NO)
+        replace.get_style_context().add_class("danger")
+        merge = dialog.add_button("Добавить к текущим", Gtk.ResponseType.YES)
+        merge.get_style_context().add_class("primary")
+        dialog.set_default_response(Gtk.ResponseType.YES)
+        dialog.show_all()
+        response = dialog.run()
+        dialog.destroy()
+        if response == Gtk.ResponseType.YES:
+            return "merge"
+        if response == Gtk.ResponseType.NO:
+            return "replace"
+        return None
+
+    def _start_blocklist_apply(self, data, action: str) -> None:
+        was_connected = self.status.connected
+        previous_location = self.current_location() if was_connected else None
+        cancel_event = threading.Event()
+        self._blocklist_op = True
+        self._blocklist_cancel = cancel_event
+        self._excl_op = True
+        self.set_busy("settings", "Применяем список сайтов…")
+        self.exclusions_page.set_busy(True)
+        self.exclusions_page.set_blocklist_busy("apply", 0, data.count)
+
+        def job():
+            if self.exclusion_mode != "general":
+                self.cli.set_exclusion_mode("general")
+            existing = self.cli.exclusions("general")
+            if action == "replace":
+                self.cli.clear_exclusions("general", cancel_event=cancel_event)
+                to_add = list(data.domains)
+            else:
+                have = {domain.strip().lower() for domain in existing}
+                to_add = [domain for domain in data.domains if domain not in have]
+            added = 0
+            cancelled = False
+            for start in range(0, len(to_add), blocklist.BATCH_SIZE):
+                if cancel_event.is_set():
+                    cancelled = True
+                    break
+                batch = to_add[start:start + blocklist.BATCH_SIZE]
+                self.cli.add_exclusions(batch, "general", cancel_event=cancel_event)
+                added += len(batch)
+                GLib.idle_add(self._blocklist_progress, added, len(to_add))
+            items = self.cli.exclusions("general")
+            try:
+                status = self.cli.status()
+            except CliError:
+                status = None
+            return {
+                "items": items, "status": status, "added": added,
+                "total": len(to_add), "cancelled": cancelled,
+            }
+
+        def done(payload) -> None:
+            self._blocklist_op = False
+            self._blocklist_cancel = None
+            self._excl_op = False
+            self.clear_busy()
+            self.exclusion_mode = "general"
+            self.exclusions = payload["items"]
+            self._exclusions_loaded = True
+            self.exclusions_page.set_data("general", payload["items"])
+            self.exclusions_page.set_busy(False)
+            self.exclusions_page.set_blocklist_busy(None)
+            self._update_exclusion_badge()
+            self.hide_banner()
+            added = payload["added"]
+            if payload["cancelled"]:
+                if action == "replace" and added == 0:
+                    self.toast(
+                        "Применение остановлено",
+                        "Список был очищен, но новые сайты не добавлены. "
+                        "Нажмите «Применить», чтобы заполнить его.",
+                        error=True,
+                    )
+                elif action == "replace":
+                    self.toast(
+                        "Применение остановлено",
+                        f"Список заменён частично: добавлено {added} "
+                        f"из {payload['total']}. Можно повторить.",
+                        error=False,
+                    )
+                else:
+                    self.toast(
+                        "Применение остановлено",
+                        f"Добавлено {added} из {payload['total']}. "
+                        "Список исключений перечитан; можно повторить.",
+                        error=False,
+                    )
+            elif action == "replace":
+                self.toast("Список заменён",
+                           f"Исключений в общем режиме: {len(payload['items'])}.",
+                           error=False)
+            elif added == 0:
+                self.toast("Список уже применён",
+                           f"Все {len(data.domains)} сайтов уже в исключениях.",
+                           error=False)
+            else:
+                self.toast("Список применён",
+                           f"Добавлено {added}; всего исключений: "
+                           f"{len(payload['items'])}.", error=False)
+            self.store.add_activity("settings", "Применён список UnRKN",
+                                    f"Добавлено {added}")
+            title = "Применение остановлено" if payload["cancelled"] else "Список применён"
+            self._after_exclusions(was_connected, payload["status"], title=title,
+                                   fallback=previous_location)
+
+        def failed(err: Exception) -> None:
+            self._blocklist_op = False
+            self._blocklist_cancel = None
+            self._excl_op = False
+            self.clear_busy()
+            self.exclusions_page.set_busy(False)
+            self.exclusions_page.set_blocklist_busy(None)
+            if isinstance(err, CliError) and err.kind == "cancelled":
+                self.toast("Применение остановлено",
+                           "Список исключений перечитан.", error=False)
+            else:
+                title, hint = cli.describe_error(err)
+                details = err.details if isinstance(err, CliError) else traceback.format_exc()
+                self.show_error("Не удалось применить список", hint, details)
+            self.load_exclusions(force=True)
+            self._after_blocklist_failure(was_connected, previous_location)
+
+        self.run_async(job, done, failed)
+
+    def _blocklist_progress(self, done: int, total: int) -> bool:
+        self.exclusions_page.set_blocklist_progress(done, total)
+        return False
+
+    def cancel_blocklist(self) -> None:
+        if not self._blocklist_op or self._blocklist_cancel is None:
+            return
+        self._blocklist_cancel.set()
+        self.exclusions_page.mark_blocklist_cancelled()
+
     def load_exclusions(self, force: bool = False) -> None:
         if not self.cli.available or self._excl_inflight or self._excl_op:
             return
@@ -1767,12 +2045,51 @@ class MainWindow(Gtk.ApplicationWindow):
 
         self.run_async(job, done, failed)
 
-    def _after_exclusions(self, was_connected: bool, status: VpnStatus | None) -> None:
+    def _after_blocklist_failure(self, was_connected: bool,
+                                 fallback=None) -> None:
+        """Reconnect if a failed bulk apply dropped an active tunnel."""
+        if not was_connected:
+            self.refresh_status()
+            return
+
+        def job():
+            try:
+                return self.cli.status()
+            except CliError:
+                return None
+
+        def done(status) -> None:
+            if status is None:
+                self.refresh_status()
+                return
+            self.apply_status(status)
+            if not needs_reconnect(True, status):
+                return
+            target = fallback or self.current_location()
+            if target is None or self.busy:
+                self.toast(
+                    "VPN отключён",
+                    "Нажмите «Подключиться», чтобы восстановить защиту.",
+                    error=True,
+                )
+                return
+            self.toast(
+                "Восстанавливаем VPN",
+                "Возвращаемся на " + self._location_name(target) + "…",
+                error=False,
+            )
+            self._start_connect(target.query, target.title, target)
+
+        self.run_async(job, done, lambda _err: self.refresh_status())
+
+    def _after_exclusions(self, was_connected: bool, status: VpnStatus | None,
+                          title: str = "Исключения применены",
+                          fallback=None) -> None:
         """Reconnect when applying exclusions dropped an active tunnel."""
         if status is None:
             if was_connected:
                 self.toast(
-                    "Исключения применены",
+                    title,
                     "Не удалось проверить состояние VPN. Проверьте статус "
                     "или нажмите «Подключиться».",
                     error=True,
@@ -1781,24 +2098,24 @@ class MainWindow(Gtk.ApplicationWindow):
             return
         if needs_reconnect(was_connected, status):
             self.apply_status(status)
-            target = self.current_location()
+            target = fallback or self.current_location()
             if target is None:
                 self.toast(
-                    "Исключения применены",
+                    title,
                     "VPN отключился. Нажмите «Подключиться», чтобы восстановить защиту.",
                     error=True,
                 )
                 return
             if self.busy:
                 self.toast(
-                    "Исключения применены",
+                    title,
                     "VPN отключился. Дождитесь завершения текущей операции и нажмите "
                     "«Подключиться», чтобы вернуться на "
                     + self._location_name(target) + ".",
                     error=True,
                 )
                 return
-            self.toast("Исключения применены", "Переподключаем VPN…", error=False)
+            self.toast(title, "Переподключаем VPN…", error=False)
             self._start_connect(target.query, target.title, target)
         else:
             self.apply_status(status)

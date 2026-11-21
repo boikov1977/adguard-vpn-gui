@@ -1,0 +1,21 @@
+# sample for tests: mixed zones, duplicates, a domain: prefix and junk
+ozon.by
+ozon.com
+ozon.de
+ozon.kz
+ozon.ru
+ozon.su
+ozon.tech
+2gis.ae
+2gis.com
+2gis.ru
+icq.com
+icq.im
+icq.net
+telega.info
+telega.me
+example.com
+example.com
+domain:prefixed.example
+not a domain
+https://bad.example/path
