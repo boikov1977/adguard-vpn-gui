@@ -198,7 +198,8 @@ packaging/build-deb.sh
 sudo apt install ./dist/adguard-vpn-gui_1.2.0_all.deb
 ```
 
-Пакет зависит от `hicolor-icon-theme`; в `Recommends` — `adwaita-icon-theme`,
+Пакет зависит от `python3-cairo`, `python3-gi-cairo` и `hicolor-icon-theme`
+(интерфейс и иконки); в `Recommends` — `adwaita-icon-theme`,
 `gir1.2-notify-0.7` и `xdg-utils` (symbolic-иконки, уведомления, запасное
 открытие ссылок). Официальный `adguardvpn-cli` входит только в `Suggests`: его
 нет в стандартных репозиториях, он ставится отдельно. Подробности, проверка
