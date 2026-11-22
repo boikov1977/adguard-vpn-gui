@@ -76,10 +76,10 @@ sudo apt install ./adguard-vpn-gui_1.2.0_all.deb
 
 Пакет ставит приложение в `/usr/lib/adguard-vpn-gui`, лаунчер в
 `/usr/bin/adguard-vpn-gui`, пункт меню, иконки и AppStream-метаданные.
-Обновление и удаление — обычными средствами apt:
+Обновление: скачайте новый `.deb` из Releases и установите его поверх
+(`apt install ./...`). Удаление — обычной командой:
 
 ```bash
-sudo apt update && sudo apt install --only-upgrade adguard-vpn-gui
 sudo apt remove adguard-vpn-gui
 ```
 
