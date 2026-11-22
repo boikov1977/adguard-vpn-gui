@@ -15,7 +15,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
-from agvpn import pings, tunnel  # noqa: E402
+from agvpn import pings, tunnel, util  # noqa: E402
 from agvpn.cli import Location  # noqa: E402
 
 HELSINKI = Location(iso="FI", country="Finland", city="Helsinki", ping=17)
@@ -52,11 +52,11 @@ class HistoryTextTests(unittest.TestCase):
     def test_text_has_value_and_date(self):
         self.assertEqual(
             pings.history_text(231, datetime(2026, 11, 22, 0, 24)),
-            "231 мс · 22.11",
+            util.human_ping(231) + " · 22.11",
         )
 
     def test_text_without_date_is_still_a_measurement(self):
-        self.assertEqual(pings.history_text(231, None), "231 мс")
+        self.assertEqual(pings.history_text(231, None), util.human_ping(231))
 
     def test_unknown_ping_is_dash(self):
         self.assertEqual(pings.history_text(None, MEASURED), "—")

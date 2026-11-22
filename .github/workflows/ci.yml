@@ -1,0 +1,70 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Tests, build and package checks
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            python3 \
+            python3-gi \
+            gir1.2-gtk-3.0 \
+            gir1.2-ayatanaappindicator3-0.1 \
+            desktop-file-utils \
+            appstream \
+            gettext \
+            rsync
+
+      - name: Show Python version
+        run: /usr/bin/python3 --version
+
+      - name: Unit tests
+        run: /usr/bin/python3 -m unittest discover -s tests -v
+
+      - name: Unit tests with English catalog
+        run: LANGUAGE=en /usr/bin/python3 -m unittest discover -s tests
+
+      - name: Byte-compile sources
+        run: /usr/bin/python3 -m compileall -q agvpn adguard-vpn-gui.py
+
+      - name: Validate gettext catalog
+        run: msgfmt --check -o /tmp/adguard-vpn-gui.mo agvpn/locale/en/LC_MESSAGES/adguard-vpn-gui.po
+
+      - name: Build .deb
+        run: packaging/build-deb.sh
+
+      - name: Inspect .deb
+        run: |
+          set -euo pipefail
+          DEB="$(ls -1 dist/adguard-vpn-gui_*_all.deb | head -n1)"
+          echo "Package: $DEB"
+          dpkg-deb -I "$DEB"
+          dpkg-deb -c "$DEB"
+
+      - name: Validate desktop entry and AppStream metadata
+        run: |
+          set -euo pipefail
+          if command -v desktop-file-validate >/dev/null 2>&1; then
+            desktop-file-validate packaging/adguard-vpn-gui.desktop
+          else
+            echo "desktop-file-validate is not available, skipping"
+          fi
+          if command -v appstreamcli >/dev/null 2>&1; then
+            appstreamcli validate --no-net packaging/com.adguardvpn.gui.metainfo.xml
+          else
+            echo "appstreamcli is not available, skipping"
+          fi

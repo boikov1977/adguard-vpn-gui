@@ -80,7 +80,7 @@ def config(state):
     protocol = {"auto": "Default (auto)", "http2": "HTTP/2", "quic": "QUIC"}.get(state.get("protocol", "auto"))
     dns = "Default (provided by AdGuard VPN)" if state.get("dns", "default") == "default" else state.get("dns")
     return f"""Current configuration:
-\tData directory: /home/andrei/.local/share/adguardvpn-cli
+\tData directory: /home/user/.local/share/adguardvpn-cli
 \tMode: {mode}
 \tSOCKS port: {state.get('socks_port', '1080')}
 \tSOCKS host: {state.get('socks_host', '127.0.0.1')}

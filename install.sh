@@ -103,6 +103,15 @@ EOF
     exit 1
 fi
 
+# The GUI is only a front-end: without the official CLI it cannot connect.
+if ! command -v adguardvpn-cli >/dev/null 2>&1; then
+    cat >&2 <<'EOF'
+Предупреждение: не найден официальный AdGuard VPN CLI (adguardvpn-cli).
+GUI будет установлен, но для подключения к VPN нужен CLI.
+Скачать и установить: https://adguard-vpn.com/ru/download.html
+EOF
+fi
+
 # Quote a value for the Exec key of a desktop entry.
 desktop_quote() {
     local value="$1"

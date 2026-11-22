@@ -26,6 +26,7 @@ from datetime import datetime
 from pathlib import Path
 
 from . import util
+from .i18n import _
 
 log = util.get_logger("blocklist")
 
@@ -194,32 +195,32 @@ def fetch(url: str = SOURCE_URL, timeout: float = 20) -> Blocklist:
             data = response.read(MAX_BYTES + 1)
     except urllib.error.HTTPError as exc:
         raise BlocklistError(
-            f"GitHub ответил ошибкой {exc.code}.",
+            _("GitHub ответил ошибкой {code}.").format(code=exc.code),
             f"{url}\n{exc}",
         ) from exc
     except urllib.error.URLError as exc:
         raise BlocklistError(
-            "Не удалось связаться с GitHub. Проверьте интернет-соединение.",
+            _("Не удалось связаться с GitHub. Проверьте интернет-соединение."),
             f"{url}\n{exc.reason}",
         ) from exc
     except (TimeoutError, OSError) as exc:
         raise BlocklistError(
-            "Не удалось загрузить список: истекло время ожидания.",
+            _("Не удалось загрузить список: истекло время ожидания."),
             f"{url}\n{exc}",
         ) from exc
     if len(data) > MAX_BYTES:
         raise BlocklistError(
-            "Список с GitHub оказался неожиданно большим.",
+            _("Список с GitHub оказался неожиданно большим."),
             f"{url}\n>{MAX_BYTES} bytes",
         )
     try:
         text = data.decode("utf-8")
     except UnicodeDecodeError as exc:
-        raise BlocklistError("Список с GitHub повреждён (не UTF-8).", str(exc)) from exc
+        raise BlocklistError(_("Список с GitHub повреждён (не UTF-8)."), str(exc)) from exc
     domains, raw_count = parse_text(text)
     if not domains:
         raise BlocklistError(
-            "В загруженном файле не нашлось доменов.",
+            _("В загруженном файле не нашлось доменов."),
             f"{url}\n{len(data)} bytes",
         )
     return Blocklist(

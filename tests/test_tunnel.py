@@ -5,11 +5,13 @@ These tests only touch temporary files and never need a display.
 """
 from __future__ import annotations
 
+import os
 import sys
 import tempfile
 import unittest
 from datetime import datetime
 from pathlib import Path
+from unittest import mock
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
@@ -23,6 +25,27 @@ REAL_LINE = (
     "[0] Using endpoint: name=cache-25.smart-pixl.net, "
     "address=201.8.95.149:443, relay=none, ping=231ms"
 )
+
+# The CLI writes errors like this every 1-2 seconds, so a few minutes of uptime
+# push the connect record far beyond the legacy 64 KB tail.
+DNS_NOISE = (
+    "22.11.2026 00:00:01.000000 ERROR [112410] VPNCORE dns_handler: "
+    "[0] Failed to resolve name: timeout\n"
+)
+
+
+def noise(count: int = 1) -> str:
+    return DNS_NOISE * count
+
+
+def endpoint_line(name: str = "cache-25.smart-pixl.net", ping: int = 231,
+                  address: str = "201.8.95.149:443",
+                  relay: str = "none") -> str:
+    return (
+        "22.11.2026 00:24:34.822055 INFO  [112410] VPNCORE pinger_handler: "
+        f"[0] Using endpoint: name={name}, address={address}, "
+        f"relay={relay}, ping={ping}ms\n"
+    )
 
 
 def read(name: str) -> str:
@@ -184,23 +207,242 @@ class TunnelLogParsingTests(unittest.TestCase):
             self.assertEqual(cache.get().name, "cache-40.example.net")
 
 
+class DeepEndpointScanTests(unittest.TestCase):
+    """The connect record must survive megabytes of DNS noise after it."""
+
+    def test_endpoint_beyond_legacy_tail_window(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "tunnel.log"
+            after = noise(2000)
+            self.assertGreater(len(after.encode()), tunnel.READ_TAIL_BYTES)
+            path.write_text(
+                noise(2000) + endpoint_line("deep.example", 123) + after,
+                encoding="utf-8",
+            )
+            endpoint = tunnel.read_last_endpoint(path)
+            self.assertIsNotNone(endpoint)
+            self.assertEqual(endpoint.name, "deep.example")
+            self.assertEqual(endpoint.ping, 123)
+
+    def test_last_endpoint_wins_when_several_are_far_from_eof(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "tunnel.log"
+            path.write_text(
+                endpoint_line("first.example", 10)
+                + noise(1000)
+                + endpoint_line("second.example", 20)
+                + noise(1000)
+                + endpoint_line("third.example", 30)
+                + noise(1000),
+                encoding="utf-8",
+            )
+            endpoint = tunnel.read_last_endpoint(path)
+            self.assertIsNotNone(endpoint)
+            self.assertEqual(endpoint.name, "third.example")
+            self.assertEqual(endpoint.ping, 30)
+
+    def test_large_log_without_endpoint_is_none(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "tunnel.log"
+            path.write_text(noise(5000), encoding="utf-8")
+            self.assertGreater(path.stat().st_size, tunnel.READ_TAIL_BYTES)
+            self.assertIsNone(tunnel.read_last_endpoint(path))
+
+    def test_endpoint_line_split_across_scan_chunks(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "tunnel.log"
+            line = endpoint_line("split.example", 77)
+            suffix = "y" * (tunnel.SCAN_CHUNK_BYTES - 10)
+            path.write_text(noise(200) + line + suffix, encoding="utf-8")
+            endpoint = tunnel.read_last_endpoint(path)
+            self.assertIsNotNone(endpoint)
+            self.assertEqual(endpoint.name, "split.example")
+            self.assertEqual(endpoint.ping, 77)
+
+    def test_scan_is_bounded(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "tunnel.log"
+            # The only endpoint sits just before the 4 MB scan limit, so it
+            # must not be found: reading an unbounded log is not acceptable.
+            path.write_text(
+                endpoint_line("too-old.example", 5)
+                + "z" * tunnel.MAX_SCAN_BYTES,
+                encoding="utf-8",
+            )
+            self.assertIsNone(tunnel.read_last_endpoint(path))
+
+
+class EndpointCacheIncrementalTests(unittest.TestCase):
+    def test_first_scan_finds_endpoint_buried_in_noise(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "tunnel.log"
+            path.write_text(
+                noise(3000) + endpoint_line("deep.example", 87) + noise(3000),
+                encoding="utf-8",
+            )
+            cache = tunnel.EndpointCache(path)
+            endpoint = cache.get()
+            self.assertIsNotNone(endpoint)
+            self.assertEqual(endpoint.name, "deep.example")
+            self.assertEqual(endpoint.ping, 87)
+
+    def test_dns_growth_keeps_value_and_reads_only_new_bytes(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "tunnel.log"
+            path.write_text(
+                noise(500) + endpoint_line("cached.example", 231),
+                encoding="utf-8",
+            )
+            cache = tunnel.EndpointCache(path)
+            first = cache.get()
+            self.assertIsNotNone(first)
+            initial_size = path.stat().st_size
+
+            original = cache._read_new
+            calls = []
+
+            def spy(target, offset, size):
+                calls.append((offset, size))
+                return original(target, offset, size)
+
+            with mock.patch.object(cache, "_read_new", side_effect=spy):
+                for _ in range(5):
+                    with open(path, "a", encoding="utf-8") as handle:
+                        handle.write(DNS_NOISE)
+                    # New DNS noise alone must not discard the known endpoint.
+                    self.assertIs(cache.get(), first)
+
+                new_line = endpoint_line("new.example", 45)
+                with open(path, "a", encoding="utf-8") as handle:
+                    handle.write(new_line)
+                second = cache.get()
+
+            self.assertIsNotNone(second)
+            self.assertEqual(second.name, "new.example")
+            self.assertEqual(second.ping, 45)
+            self.assertEqual(len(calls), 6)
+            self.assertEqual(calls[0][0], initial_size)
+            for offset, size in calls[:5]:
+                self.assertEqual(size - offset, len(DNS_NOISE.encode()))
+                self.assertGreater(offset, 0)
+            last_offset, last_size = calls[-1]
+            self.assertEqual(last_size - last_offset, len(new_line.encode()))
+            # Every read was a small append, never the whole (larger) file.
+            self.assertLess(
+                max(size - offset for offset, size in calls), initial_size)
+
+    def test_partial_line_is_reassembled_across_polls(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "tunnel.log"
+            path.write_text(endpoint_line("old.example", 11), encoding="utf-8")
+            cache = tunnel.EndpointCache(path)
+            first = cache.get()
+            self.assertEqual(first.name, "old.example")
+
+            line = endpoint_line("partial.example", 99)
+            split = line.index("name=")
+            with open(path, "a", encoding="utf-8") as handle:
+                handle.write(line[:split])
+            self.assertIs(cache.get(), first)
+
+            with open(path, "a", encoding="utf-8") as handle:
+                handle.write(line[split:])
+            second = cache.get()
+            self.assertEqual(second.name, "partial.example")
+            self.assertEqual(second.ping, 99)
+
+    def test_truncated_file_is_rescanned(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "tunnel.log"
+            path.write_text(
+                endpoint_line("old.example", 11) + noise(200),
+                encoding="utf-8",
+            )
+            cache = tunnel.EndpointCache(path)
+            self.assertEqual(cache.get().name, "old.example")
+
+            path.write_text(endpoint_line("new.example", 22), encoding="utf-8")
+            endpoint = cache.get()
+            self.assertIsNotNone(endpoint)
+            self.assertEqual(endpoint.name, "new.example")
+            self.assertEqual(endpoint.ping, 22)
+
+    def test_rotated_file_is_rescanned(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "tunnel.log"
+            path.write_text(endpoint_line("old.example", 11), encoding="utf-8")
+            cache = tunnel.EndpointCache(path)
+            self.assertEqual(cache.get().name, "old.example")
+
+            rotated = Path(tmp) / "tunnel.log.1"
+            replacement = Path(tmp) / "tunnel.log.new"
+            os.replace(path, rotated)
+            replacement.write_text(
+                endpoint_line("new.example", 22), encoding="utf-8")
+            os.replace(replacement, path)
+
+            endpoint = cache.get()
+            self.assertIsNotNone(endpoint)
+            self.assertEqual(endpoint.name, "new.example")
+
+    def test_rewrite_that_grows_past_old_offset_is_rescanned(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "tunnel.log"
+            old = endpoint_line("old.example", 11) + noise(100)
+            path.write_text(old, encoding="utf-8")
+            cache = tunnel.EndpointCache(path)
+            self.assertEqual(cache.get().name, "old.example")
+
+            # Same inode, larger than the old offset (copy-truncate followed by
+            # significant growth).  Only the bytes before the old offset can
+            # reveal that the file was replaced.
+            path.write_text(
+                "x" * len(old) + endpoint_line("new.example", 22),
+                encoding="utf-8",
+            )
+            self.assertGreater(path.stat().st_size, len(old))
+            endpoint = cache.get()
+            self.assertIsNotNone(endpoint)
+            self.assertEqual(endpoint.name, "new.example")
+
+    def test_invalidate_forces_a_fresh_scan(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "tunnel.log"
+            path.write_text(endpoint_line("old.example", 11), encoding="utf-8")
+            cache = tunnel.EndpointCache(path)
+            self.assertEqual(cache.get().name, "old.example")
+
+            with mock.patch(
+                "agvpn.tunnel.read_last_endpoint",
+                wraps=tunnel.read_last_endpoint,
+            ) as scan:
+                cache.invalidate()
+                endpoint = cache.get()
+            self.assertEqual(scan.call_count, 1)
+            self.assertEqual(endpoint.name, "old.example")
+
+
 class PingFormattingTests(unittest.TestCase):
     """Estimates must be visibly different from measured values."""
 
     def test_estimate_is_marked(self):
-        self.assertEqual(util.human_estimate(17), "≈17 мс")
-        self.assertEqual(util.human_estimate(0), "≈0 мс")
+        self.assertTrue(util.human_estimate(17).startswith("≈17"))
+        self.assertTrue(util.human_estimate(0).startswith("≈0"))
         self.assertEqual(util.human_estimate(None), "—")
         self.assertEqual(util.human_estimate(9999), "—")
 
     def test_measurement_has_no_estimate_mark(self):
-        self.assertEqual(util.human_ping(231), "231 мс")
+        value = util.human_ping(231)
+        self.assertTrue(value.startswith("231 "))
         self.assertEqual(util.human_ping(None), "—")
-        self.assertNotIn("≈", util.human_ping(231))
+        self.assertNotIn("≈", value)
 
     def test_tooltip_explains_estimate(self):
-        self.assertIn("Оценка AdGuard", util.ESTIMATE_TOOLTIP)
-        self.assertIn("не измерение", util.ESTIMATE_TOOLTIP.lower())
+        self.assertIn("AdGuard", util.ESTIMATE_TOOLTIP)
+        self.assertTrue(
+            "не измерение" in util.ESTIMATE_TOOLTIP.lower()
+            or "not a measurement" in util.ESTIMATE_TOOLTIP.lower()
+        )
 
     def test_measured_at_text(self):
         stamp = datetime(2026, 11, 22, 0, 24, 34, 822055)

@@ -23,6 +23,16 @@ except Exception as exc:  # pragma: no cover - depends on the host
     sys.exit(1)
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+ROOT = os.path.dirname(HERE)
+if ROOT not in sys.path:
+    sys.path.insert(0, ROOT)
+
+try:  # pragma: no cover - exercised when launched by sudo as a script
+    from agvpn.i18n import _
+except Exception:  # keep the password dialog usable even without the package
+    def _(text: str) -> str:
+        return text
+
 ASSETS = os.path.join(HERE, "assets")
 STYLE = os.path.join(HERE, "style.css")
 RETRY_FILE = os.path.join(
@@ -137,11 +147,29 @@ def _mark_attempt() -> bool:
     except OSError:
         stale = False
     retry = not stale and os.path.exists(RETRY_FILE)
+    # O_NOFOLLOW: never follow a pre-created symlink in the shared /tmp
+    # fallback.  The file only holds a timestamp; a failure is harmless.
     try:
-        with open(RETRY_FILE, "w", encoding="utf-8") as fh:
-            fh.write(str(time.time()))
-    except Exception:
+        fd = os.open(
+            RETRY_FILE,
+            os.O_WRONLY | os.O_CREAT | os.O_TRUNC | os.O_NOFOLLOW,
+            0o600,
+        )
+    except OSError:
+        return retry
+    # Tighten a marker left by an older version with looser permissions.
+    try:
+        os.fchmod(fd, 0o600)
+    except OSError:
         pass
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as fh:
+            fh.write(str(time.time()))
+    except OSError:
+        try:
+            os.close(fd)
+        except OSError:
+            pass
     return retry
 
 
@@ -178,11 +206,11 @@ def main() -> int:
     retry = _mark_attempt()
 
     result = {"code": 1}
-    window = Gtk.Dialog(title="Пароль администратора")
+    window = Gtk.Dialog(title=_("Пароль администратора"))
     try:
         header = Gtk.HeaderBar()
         header.set_show_close_button(True)
-        header.set_title("Пароль администратора")
+        header.set_title(_("Пароль администратора"))
         header.get_style_context().add_class("askpass-header")
         window.set_titlebar(header)
     except Exception:
@@ -216,10 +244,12 @@ def main() -> int:
     head.add(badge)
 
     titles = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=3)
-    title = Gtk.Label(label="Нужен пароль администратора", xalign=0)
+    title = Gtk.Label(label=_("Нужен пароль администратора"), xalign=0)
     title.get_style_context().add_class("askpass-title")
     subtitle = Gtk.Label(
-        label=f"AdGuard VPN запустит защищённую службу от имени пользователя {user}.",
+        label=_("AdGuard VPN запустит защищённую службу от имени пользователя {user}.").format(
+            user=user
+        ),
         xalign=0,
     )
     subtitle.set_line_wrap(True)
@@ -234,7 +264,7 @@ def main() -> int:
     retry_label.set_line_wrap(True)
     retry_label.get_style_context().add_class("askpass-warning")
     if retry:
-        retry_label.set_text("Похоже, пароль не подошёл. Попробуйте ещё раз.")
+        retry_label.set_text(_("Похоже, пароль не подошёл. Попробуйте ещё раз."))
     else:
         retry_label.set_visible(False)
     card.add(retry_label)
@@ -242,7 +272,7 @@ def main() -> int:
     entry = Gtk.Entry()
     entry.set_visibility(False)
     entry.set_input_purpose(Gtk.InputPurpose.PASSWORD)
-    entry.set_placeholder_text("Пароль администратора")
+    entry.set_placeholder_text(_("Пароль администратора"))
     entry.set_activates_default(True)
     entry.get_style_context().add_class("askpass-entry")
     card.add(entry)
@@ -253,10 +283,10 @@ def main() -> int:
     card.add(error_label)
 
     options = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
-    show = Gtk.CheckButton(label="Показать пароль")
+    show = Gtk.CheckButton(label=_("Показать пароль"))
     show.connect("toggled", lambda btn: entry.set_visibility(btn.get_active()))
     options.add(show)
-    caps = Gtk.Label(label="Включён Caps Lock", xalign=1)
+    caps = Gtk.Label(label=_("Включён Caps Lock"), xalign=1)
     caps.set_hexpand(True)
     caps.set_halign(Gtk.Align.END)
     caps.get_style_context().add_class("askpass-warning")
@@ -265,15 +295,15 @@ def main() -> int:
     card.add(options)
 
     hint = Gtk.Label(
-        label="Пароль нужен только для запуска VPN-службы. Он не сохраняется приложением.",
+        label=_("Пароль нужен только для запуска VPN-службы. Он не сохраняется приложением."),
         xalign=0,
     )
     hint.set_line_wrap(True)
     hint.get_style_context().add_class("askpass-subtitle")
     card.add(hint)
 
-    cancel = window.add_button("Отмена", Gtk.ResponseType.CANCEL)
-    ok = window.add_button("Подтвердить", Gtk.ResponseType.OK)
+    cancel = window.add_button(_("Отмена"), Gtk.ResponseType.CANCEL)
+    ok = window.add_button(_("Подтвердить"), Gtk.ResponseType.OK)
     cancel.get_style_context().add_class("askpass-cancel")
     ok.get_style_context().add_class("askpass-ok")
     window.set_default_response(Gtk.ResponseType.OK)
@@ -294,17 +324,22 @@ def main() -> int:
 
     def on_response(dialog, response_id):
         if response_id != Gtk.ResponseType.OK:
+            # A plain Cancel is not a failed password attempt; do not make the
+            # next prompt claim the previous password was wrong.
+            _clear_attempt()
             result["code"] = 1
             dialog.destroy()
             return
         password = entry.get_text()
         if not password:
-            error_label.set_text("Введите пароль администратора.")
+            error_label.set_text(_("Введите пароль администратора."))
             error_label.set_visible(True)
             entry.grab_focus()
             return
         entry.set_text("")
-        _clear_attempt()
+        # Keep the marker: sudo invokes askpass again after a wrong password,
+        # and that second prompt should say the previous attempt failed.  The
+        # GUI resets the marker at the start of the next operation.
         try:
             sys.stdout.write(password + "\n")
             sys.stdout.flush()

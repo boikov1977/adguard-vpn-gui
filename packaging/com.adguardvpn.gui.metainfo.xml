@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>com.adguardvpn.gui</id>
+  <name>AdGuard VPN</name>
+  <summary>Unofficial GTK3 GUI for the AdGuard VPN CLI</summary>
+  <summary xml:lang="ru">Неофициальный графический интерфейс для AdGuard VPN CLI</summary>
+
+  <metadata_license>MIT</metadata_license>
+  <project_license>MIT</project_license>
+
+  <description>
+    <p>
+      AdGuard VPN GUI is an unofficial GTK3 front-end for the official
+      adguardvpn-cli on Linux, written in Python 3.
+    </p>
+    <p>Features:</p>
+    <ul>
+      <li>connect and disconnect the VPN, switch locations;</li>
+      <li>location list with search by city, country and ISO code;</li>
+      <li>real ping of the active server from tunnel.log with measurement history;</li>
+      <li>exclusions: general and selective modes, UnRKN list;</li>
+      <li>CLI settings: TUN/SOCKS mode, protocol, DNS, routing;</li>
+      <li>account and license details, terminal-based login;</li>
+      <li>tray icon and autostart at login.</li>
+    </ul>
+    <p>
+      This project is not affiliated with AdGuard Software Ltd. and is not an
+      official AdGuard client.
+    </p>
+    <p xml:lang="ru">
+      AdGuard VPN GUI — неофициальная графическая оболочка для официального
+      клиента adguardvpn-cli на Linux. Написана на Python 3 с GTK3.
+      Подключение и отключение VPN, выбор локаций, исключения, настройки CLI,
+      сведения об аккаунте, иконка в системном лотке и автозапуск.
+      Проект не связан с AdGuard Software Ltd. и не является официальным
+      клиентом AdGuard.
+    </p>
+  </description>
+
+  <launchable type="desktop-id">adguard-vpn-gui.desktop</launchable>
+
+  <url type="homepage">https://github.com/boikov1977/adguard-vpn-gui</url>
+  <url type="bugtracker">https://github.com/boikov1977/adguard-vpn-gui/issues</url>
+  <url type="vcs-browser">https://github.com/boikov1977/adguard-vpn-gui</url>
+
+  <developer id="com.adguardvpn">
+    <name>boikov1977</name>
+  </developer>
+
+  <categories>
+    <category>Network</category>
+    <category>Security</category>
+  </categories>
+
+  <keywords>
+    <keyword>VPN</keyword>
+    <keyword>AdGuard</keyword>
+    <keyword>Security</keyword>
+    <keyword>Privacy</keyword>
+  </keywords>
+
+  <screenshots>
+    <screenshot type="default">
+      <caption>Панель управления: состояние подключения</caption>
+      <caption xml:lang="en">Dashboard: connection state</caption>
+      <image type="source">https://raw.githubusercontent.com/boikov1977/adguard-vpn-gui/main/docs/screenshots/dashboard.png</image>
+    </screenshot>
+    <screenshot>
+      <caption>Список локаций с поиском и ping</caption>
+      <caption xml:lang="en">Location list with search and ping</caption>
+      <image type="source">https://raw.githubusercontent.com/boikov1977/adguard-vpn-gui/main/docs/screenshots/locations.png</image>
+    </screenshot>
+  </screenshots>
+
+  <releases>
+    <release version="1.2.0" date="2026-11-22">
+      <description>
+        <p xml:lang="ru">Избранные локации и меню в трее, автозапуск VPN,
+          обновление CLI и экспорт журналов из приложения, экономичный polling,
+          английский интерфейс и пакет .deb.</p>
+        <p>Favourite locations and tray menu, VPN autostart, in-app CLI update
+          and log export, economical status polling, English UI and a .deb
+          package.</p>
+      </description>
+    </release>
+    <release version="1.1.1" date="2026-11-22">
+      <description>
+        <p xml:lang="ru">Исправления парсеров CLI и истории замеров ping.</p>
+        <p>Fixes for CLI parsers and ping measurement history.</p>
+      </description>
+    </release>
+  </releases>
+
+  <content_rating type="oars-1.1"/>
+</component>

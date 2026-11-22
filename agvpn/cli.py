@@ -19,6 +19,7 @@ from pathlib import Path
 from typing import Callable, Iterable
 
 from . import util
+from .i18n import _
 
 log = util.get_logger("cli")
 
@@ -165,6 +166,48 @@ def strip_ansi(text: str) -> str:
     return ANSI_RE.sub("", text or "").replace("\r\n", "\n").replace("\r", "\n")
 
 
+def _clip_argv_part(text: str, limit: int) -> str:
+    if len(text) <= limit:
+        return text
+    return text[: max(0, limit - 1)].rstrip() + "…"
+
+
+def format_argv_for_log(argv: Iterable[str], *, arg_limit: int = 80,
+                        total_limit: int = 300) -> str:
+    """Safe, bounded representation of CLI arguments for the app log.
+
+    Exclusion commands may carry hundreds of domains in one argument
+    (``site-exclusions add "a.com b.com ..."``).  That list is private and
+    huge, so it is replaced with a count instead of being written to disk.
+    """
+    parts: list[str] = []
+    for raw in argv:
+        arg = str(raw)
+        if len(arg) <= arg_limit:
+            parts.append(arg)
+            continue
+        tokens = arg.split()
+        if len(tokens) > 1:
+            parts.append(f"<{len(tokens)} args>")
+        else:
+            parts.append(_clip_argv_part(arg, arg_limit))
+    text = " ".join(parts)
+    if len(text) <= total_limit:
+        return text
+    # Too many short arguments: keep what fits and summarise the tail.
+    kept: list[str] = []
+    length = 0
+    for index, part in enumerate(parts):
+        extra = len(part) + (1 if kept else 0)
+        if length + extra > total_limit - 16:
+            remaining = len(parts) - index
+            kept.append(f"<{remaining} args>")
+            break
+        kept.append(part)
+        length += extra
+    return " ".join(kept)
+
+
 def _clean_lines(text: str) -> list[str]:
     return [line.rstrip() for line in strip_ansi(text).splitlines()]
 
@@ -179,38 +222,38 @@ def _first_nonempty(lines: Iterable[str]) -> str:
 def describe_error(err: Exception) -> tuple[str, str]:
     """Return (short Russian message, helpful next step)."""
     if not isinstance(err, CliError):
-        return "Что-то пошло не так", "Подробности записаны в журнал приложения."
+        return _("Что-то пошло не так"), _("Подробности записаны в журнал приложения.")
     kind = err.kind
     if kind == "missing":
-        return ("Не найден adguardvpn-cli",
-                "Установите AdGuard VPN CLI: https://adguard-vpn.com/ru/download.html")
+        return (_("Не найден adguardvpn-cli"),
+                _("Установите AdGuard VPN CLI: https://adguard-vpn.com/ru/download.html"))
     if kind == "auth_cancelled":
-        return ("Ввод пароля отменён",
-                "VPN остался отключён. Нажмите «Подключиться» и введите пароль администратора, чтобы попробовать снова.")
+        return (_("Ввод пароля отменён"),
+                _("VPN остался отключён. Нажмите «Подключиться» и введите пароль администратора, чтобы попробовать снова."))
     if kind == "auth_failed":
-        return ("Неверный пароль администратора",
-                "Проверьте раскладку и Caps Lock, затем попробуйте ещё раз. Пароль не сохраняется.")
+        return (_("Неверный пароль администратора"),
+                _("Проверьте раскладку и Caps Lock, затем попробуйте ещё раз. Пароль не сохраняется."))
     if kind == "auth_unavailable":
-        return ("Не удалось показать запрос пароля",
-                "Запустите приложение внутри графической сессии (DISPLAY/Wayland) и повторите попытку.")
+        return (_("Не удалось показать запрос пароля"),
+                _("Запустите приложение внутри графической сессии (DISPLAY/Wayland) и повторите попытку."))
     if kind == "not_logged_in":
-        return ("Нужно войти в аккаунт AdGuard",
-                "Откройте раздел «Аккаунт» и войдите — без аккаунта CLI не подключается.")
+        return (_("Нужно войти в аккаунт AdGuard"),
+                _("Откройте раздел «Аккаунт» и войдите — без аккаунта CLI не подключается."))
     if kind == "location":
-        return ("Локация недоступна",
-                "Выберите другую локацию. Возможно, сервер временно недоступен.")
+        return (_("Локация недоступна"),
+                _("Выберите другую локацию. Возможно, сервер временно недоступен."))
     if kind == "service":
-        return ("VPN-служба не запустилась",
-                "Проверьте, что установлен пакет, создающий TUN-интерфейс, и повторите попытку. Подробности ниже.")
+        return (_("VPN-служба не запустилась"),
+                _("Проверьте, что установлен пакет, создающий TUN-интерфейс, и повторите попытку. Подробности ниже."))
     if kind == "timeout":
-        return ("Операция заняла слишком много времени",
-                "Проверьте статус: возможно, подключение всё же установилось. Попробуйте обновить статус или отключиться.")
+        return (_("Операция заняла слишком много времени"),
+                _("Проверьте статус: возможно, подключение всё же установилось. Попробуйте обновить статус или отключиться."))
     if kind == "network":
-        return ("Проблема с сетью",
-                "Проверьте интернет-соединение и повторите попытку.")
+        return (_("Проблема с сетью"),
+                _("Проверьте интернет-соединение и повторите попытку."))
     if kind == "busy":
-        return ("Служба занята", "Дождитесь завершения текущей операции и повторите.")
-    return ("Не удалось выполнить команду", "Технические подробности — ниже.")
+        return (_("Служба занята"), _("Дождитесь завершения текущей операции и повторите."))
+    return (_("Не удалось выполнить команду"), _("Технические подробности — ниже."))
 
 
 # ---------------------------------------------------------------------------
@@ -305,7 +348,8 @@ class AdGuardCLI:
                 out, err = proc.communicate(timeout=timeout)
             except subprocess.TimeoutExpired:
                 timed_out = True
-                log.warning("Command timed out after %.0fs: %s", timeout, " ".join(argv))
+                log.warning("Command timed out after %.0fs: %s", timeout,
+                            format_argv_for_log(argv[1:]))
                 self._terminate(proc)
                 try:
                     out, err = proc.communicate(timeout=5)
@@ -320,13 +364,13 @@ class AdGuardCLI:
             argv=argv, code=proc.returncode if proc.returncode is not None else -1,
             stdout=out or "", stderr=err or "", duration=duration, timed_out=timed_out,
         )
-        log.info("run %s -> rc=%s %.1fs%s", " ".join(argv[1:]), result.code, duration,
-                 " (timeout)" if timed_out else "")
+        log.info("run %s -> rc=%s %.1fs%s", format_argv_for_log(argv[1:]),
+                 result.code, duration, " (timeout)" if timed_out else "")
         if cancel_event is not None and cancel_event.is_set():
             raise CliError("Operation cancelled", kind="cancelled", result=result)
         if timed_out:
             raise CliError("Command timed out", kind="timeout", result=result,
-                           hint="Проверьте статус VPN — возможно, операция уже завершилась.")
+                           hint=_("Проверьте статус VPN — возможно, операция уже завершилась."))
         return result
 
     def cancel(self, event: threading.Event | None) -> None:
@@ -798,6 +842,28 @@ class AdGuardCLI:
         if match or "available" in low:
             return True, text
         return False, text
+
+    def update(self, timeout: float = 300) -> CliResult:
+        """Run the official CLI updater non-interactively."""
+        result = self._run(["update", "-y"], timeout=timeout)
+        self._raise_for_output(result)
+        return result
+
+    def export_logs(self, path: Path, timeout: float = 120) -> Path:
+        """Export CLI logs to *path* with the official command."""
+        target = Path(path).expanduser()
+        parent = target.parent
+        if not parent.exists():
+            try:
+                parent.mkdir(parents=True, exist_ok=True)
+            except OSError as exc:
+                raise CliError(f"Could not create export directory: {exc}",
+                               kind="unknown") from exc
+        result = self._run(
+            ["export-logs", "-o", str(target), "-f"], timeout=timeout
+        )
+        self._raise_for_output(result)
+        return target
 
     def tail_log(self, lines: int = 160) -> str:
         chunks: list[str] = []

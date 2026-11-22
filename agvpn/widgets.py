@@ -12,7 +12,8 @@ gi.require_version("Gdk", "3.0")
 gi.require_version("Pango", "1.0")
 from gi.repository import Gdk, GLib, Gtk, Pango  # noqa: E402
 
-from . import pings, util  # noqa: E402
+from . import pings, util
+from .i18n import _  # noqa: E402
 
 ACCENT = (0.31, 0.906, 0.682)          # #4fe7ae
 ACCENT_DARK = (0.07, 0.55, 0.38)
@@ -152,7 +153,7 @@ class PowerButton(Gtk.Button):
         self.connect("enter-notify-event", self._on_enter)
         self.connect("leave-notify-event", self._on_leave)
         self.connect("notify::sensitive", lambda *_: self.queue_draw())
-        self.get_accessible().set_name("Подключить VPN")
+        self.get_accessible().set_name(_("Подключить VPN"))
 
     @property
     def state(self) -> str:
@@ -164,7 +165,7 @@ class PowerButton(Gtk.Button):
             self._state = state
             try:
                 self.get_accessible().set_name(
-                    "Отключить VPN" if state == "connected" else "Подключить VPN"
+                    _("Отключить VPN") if state == "connected" else _("Подключить VPN")
                 )
             except Exception:
                 pass
@@ -352,10 +353,14 @@ class LocationRow(Gtk.Button):
                  endpoint_name: str | None = None,
                  measured_at=None, history_ping: int | None = None,
                  history_measured_at=None, history_endpoint: str | None = None,
-                 history_address: str | None = None) -> None:
+                 history_address: str | None = None,
+                 favorite: bool = False, on_favorite=None) -> None:
         super().__init__()
         self.location = loc
         self._on_activate = on_activate
+        self._favorite = favorite
+        self._on_favorite = on_favorite
+        self._context_menu: Gtk.Menu | None = None
         self.set_relief(Gtk.ReliefStyle.NONE)
         self.set_focus_on_click(True)
         self.get_style_context().add_class("loc-row")
@@ -391,45 +396,68 @@ class LocationRow(Gtk.Button):
                 ping_tip = util.REAL_PING_TOOLTIP
                 measured = util.measured_at_text(measured_at)
                 if measured:
-                    ping_tip += f"\nЗамер: {measured}"
+                    ping_tip += "\n" + _("Замер: {time}").format(time=measured)
                 if endpoint_name:
-                    ping_tip += f"\nСервер: {endpoint_name}"
+                    ping_tip += "\n" + _("Сервер: {name}").format(name=endpoint_name)
+            elif history_ping is not None:
+                # The live endpoint line may have scrolled out of tunnel.log.
+                # A dated measurement is still honest; AdGuard's estimate is not.
+                ping_text = pings.history_text(history_ping, history_measured_at)
+                ping_tip = _("Последний реальный замер: {ping}").format(
+                    ping=util.human_ping(history_ping)
+                )
+                measured = util.measured_at_text(history_measured_at)
+                if measured:
+                    ping_tip += "\n" + _("Замер: {time}").format(time=measured)
+                if history_endpoint:
+                    ping_tip += "\n" + _("Сервер: {name}").format(name=history_endpoint)
+                if history_address:
+                    ping_tip += "\n" + _("Адрес: {address}").format(address=history_address)
             else:
                 ping_text = "—"
-                ping_tip = ("Реальный ping сервера неизвестен: в журнале CLI "
-                            "нет записи о выбранном сервере. Оценка AdGuard "
-                            "не подставляется.")
-            ping_class = util.ping_class(real_ping)
+                ping_tip = _(
+                    "Реальный ping сервера неизвестен: в журнале CLI "
+                    "нет записи о выбранном сервере. Оценка AdGuard "
+                    "не подставляется."
+                )
+            ping_class = util.ping_class(
+                real_ping if real_ping is not None else history_ping
+            )
         elif history_ping is not None:
             # A previously visited location: the last real measurement, always
             # with its date.  This is never the AdGuard estimate.
             ping_text = pings.history_text(history_ping, history_measured_at)
-            ping_tip = f"Последний реальный замер: {util.human_ping(history_ping)}"
+            ping_tip = _("Последний реальный замер: {ping}").format(
+                ping=util.human_ping(history_ping)
+            )
             measured = util.measured_at_text(history_measured_at)
             if measured:
-                ping_tip += f"\nЗамер: {measured}"
+                ping_tip += "\n" + _("Замер: {time}").format(time=measured)
             if history_endpoint:
-                ping_tip += f"\nСервер: {history_endpoint}"
+                ping_tip += "\n" + _("Сервер: {name}").format(name=history_endpoint)
             if history_address:
-                ping_tip += f"\nАдрес: {history_address}"
+                ping_tip += "\n" + _("Адрес: {address}").format(address=history_address)
             ping_class = util.ping_class(history_ping)
         else:
             ping_text = util.human_estimate(loc.ping)
             ping_tip = util.ESTIMATE_TOOLTIP
             ping_class = util.ping_class(loc.ping)
         ping_group = hbox(4)
+        show_history = history_ping is not None and (
+            not (current and connected) or real_ping is None
+        )
         if current and connected and real_ping is not None:
-            real_tag = label("реальный", "tiny muted")
+            real_tag = label(_("реальный"), "tiny muted")
             real_tag.set_valign(Gtk.Align.CENTER)
             real_tag.set_tooltip_text(ping_tip)
             ping_group.pack_start(real_tag, False, False, 0)
-        if history_ping is not None and not (current and connected):
+        if show_history:
             group = vbox(0)
             group.set_valign(Gtk.Align.CENTER)
             ping = label(ping_text, f"small {ping_class}", xalign=1.0)
             ping.set_tooltip_text(ping_tip)
             group.pack_start(ping, False, False, 0)
-            caption = label("последний замер", "tiny muted", xalign=1.0)
+            caption = label(_("последний замер"), "tiny muted", xalign=1.0)
             caption.set_tooltip_text(ping_tip)
             group.pack_start(caption, False, False, 0)
             ping_group.pack_start(group, False, False, 0)
@@ -441,22 +469,67 @@ class LocationRow(Gtk.Button):
         ping_group.set_margin_end(6)
         outer.pack_end(ping_group, False, False, 0)
 
+        if favorite:
+            star = icon("starred-symbolic", 14)
+            star.get_style_context().add_class("favorite-star")
+            star.set_valign(Gtk.Align.CENTER)
+            star.set_halign(Gtk.Align.CENTER)
+            star.set_tooltip_text(_("В избранном. ПКМ по строке — убрать из избранного."))
+            outer.pack_end(star, False, False, 0)
+
         if current and connected:
-            outer.pack_end(pill("Подключено", "accent"), False, False, 0)
+            outer.pack_end(pill(_("Подключено"), "accent"), False, False, 0)
         else:
-            action = label("Сменить" if connected else "Подключить", "row-action")
+            action = label(_("Сменить") if connected else _("Подключить"), "row-action")
             action.set_valign(Gtk.Align.CENTER)
             outer.pack_end(action, False, False, 0)
 
         self.connect("clicked", self._clicked)
-        self.set_tooltip_text(
-            f"{'Уже подключено: ' if current and connected else 'Подключиться: '}"
-            f"{loc.title}, {loc.country}"
-        )
+        self.connect("button-press-event", self._on_button_press)
+        if current and connected:
+            self.set_tooltip_text(
+                _("Уже подключено: {title}, {country}").format(
+                    title=loc.title, country=loc.country
+                )
+            )
+        else:
+            self.set_tooltip_text(
+                _("Подключиться: {title}, {country}").format(
+                    title=loc.title, country=loc.country
+                )
+            )
 
     def _clicked(self, _button) -> None:
         if self._on_activate:
             self._on_activate(self.location)
+
+    def _on_button_press(self, _widget, event) -> bool:
+        """Right click opens the favourite menu without starting a connect."""
+        if event.button != 3 or self._on_favorite is None:
+            return False
+        menu = Gtk.Menu()
+        if self._favorite:
+            item = Gtk.MenuItem(label=_("Убрать из избранного"))
+        else:
+            item = Gtk.MenuItem(label=_("Добавить в избранное"))
+        item.connect("activate", self._favorite_activated)
+        menu.append(item)
+        menu.attach_to_widget(self, None)
+        menu.show_all()
+        self._context_menu = menu
+        menu.popup_at_pointer(event)
+        return True
+
+    def _favorite_activated(self, _item) -> None:
+        if self._on_favorite is None:
+            return
+        # Rebuilding the list destroys this row, so let the menu close first.
+        GLib.idle_add(self._run_favorite)
+
+    def _run_favorite(self) -> bool:
+        if self._on_favorite:
+            self._on_favorite(self.location)
+        return False
 
 
 # ---------------------------------------------------------------------------
@@ -647,9 +720,9 @@ class ActivityItem(Gtk.Box):
         self.pack_start(badge, False, False, 0)
         texts = vbox(1)
         texts.set_valign(Gtk.Align.CENTER)
-        texts.pack_start(label(item.get("title", ""), "small"), False, False, 0)
+        texts.pack_start(label(_(item.get("title", "")), "small"), False, False, 0)
         subtitle = item.get("subtitle") or ""
-        texts.pack_start(label(subtitle, "tiny dim"), False, False, 0)
+        texts.pack_start(label(_(subtitle), "tiny dim"), False, False, 0)
         self.pack_start(texts, True, True, 0)
         when = label(util.relative_time(item.get("ts")), "tiny dim")
         when.set_valign(Gtk.Align.CENTER)

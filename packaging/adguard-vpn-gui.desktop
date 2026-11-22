@@ -1,0 +1,15 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=AdGuard VPN
+GenericName=VPN Client
+Comment=Графический интерфейс для официального adguardvpn-cli
+Comment[en]=Graphical interface for the official adguardvpn-cli
+Exec=/usr/bin/adguard-vpn-gui
+Icon=adguard-vpn-gui
+Terminal=false
+Categories=Network;Security;
+Keywords=VPN;AdGuard;AdGuard VPN;Security;Privacy;
+Keywords[ru]=VPN;AdGuard;AdGuard VPN;Безопасность;Приватность;
+StartupNotify=true
+StartupWMClass=AdGuardVPNGui

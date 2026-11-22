@@ -1,0 +1,21 @@
+adguard-vpn-gui (1.2.0) unstable; urgency=medium
+
+  * Избранные локации, подменю «Локации» в трее, автозапуск VPN.
+  * Обновление CLI и экспорт журналов из приложения.
+  * Экономичный polling статуса, английский интерфейс (gettext).
+  * Исправлена память геометрии окна и кнопка разворота на 1366×768.
+  * Добавлена сборка пакета .deb (packaging/build-deb.sh) и CI.
+  * Favourite locations and tray menu, VPN autostart.
+  * In-app CLI update and log export.
+  * Economical status polling, English UI (gettext).
+  * Fixed window geometry persistence and maximize on 1366×768.
+  * Added .deb packaging (packaging/build-deb.sh) and CI.
+
+ -- boikov1977 <boikov1977@users.noreply.github.com>  Sun, 22 Nov 2026 12:00:00 +0300
+
+adguard-vpn-gui (1.1.1) unstable; urgency=medium
+
+  * Исправления парсеров CLI, истории замеров ping и обработки askpass.
+  * Fixes for CLI parsers, ping measurement history and askpass handling.
+
+ -- boikov1977 <boikov1977@users.noreply.github.com>  Sun, 22 Nov 2026 00:00:00 +0300

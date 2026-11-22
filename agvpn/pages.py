@@ -11,6 +11,7 @@ gi.require_version("Pango", "1.0")
 from gi.repository import GLib, Gtk, Pango  # noqa: E402
 
 from . import blocklist, cli, locations, util  # noqa: E402
+from .i18n import _, ngettext  # noqa: E402
 from .widgets import (  # noqa: E402
     ActivityItem, EmptyState, LocationRow, SegmentedControl, StatTile,
     card, hbox, icon, label, page_header, pill, section_label, setting_row,
@@ -105,8 +106,8 @@ class DashboardPage(Page):
         self._activity_signature = None
 
         self.body.pack_start(page_header(
-            "Главная",
-            "Состояние защиты и быстрый доступ к локациям.",
+            _("Главная"),
+            _("Состояние защиты и быстрый доступ к локациям."),
         ), False, False, 0)
 
         # Hero -----------------------------------------------------------------
@@ -115,28 +116,28 @@ class DashboardPage(Page):
         self.hero.pack_start(self.hero_row, True, True, 0)
 
         left = vbox(7)
-        self.eyebrow = label("СТАТУС ЗАЩИТЫ", "eyebrow")
+        self.eyebrow = label(_("СТАТУС ЗАЩИТЫ"), "eyebrow")
         left.pack_start(self.eyebrow, False, False, 0)
-        self.hero_title = label("VPN отключён", "page-title")
+        self.hero_title = label(_("VPN отключён"), "page-title")
         left.pack_start(self.hero_title, False, False, 0)
-        self.hero_sub = label("Ваш IP-адрес и трафик не защищены.", "page-sub", wrap=True, max_width=52)
+        self.hero_sub = label(_("Ваш IP-адрес и трафик не защищены."), "page-sub", wrap=True, max_width=52)
         left.pack_start(self.hero_sub, False, False, 0)
 
         self.hero_buttons = hbox(8)
         self.hero_buttons.set_margin_top(8)
-        self.primary_btn = Gtk.Button(label="Подключиться")
+        self.primary_btn = Gtk.Button(label=_("Подключиться"))
         self.primary_btn.get_style_context().add_class("primary")
         self.primary_btn.connect("clicked", lambda *_: self.win.toggle_connection())
         self.hero_buttons.pack_start(self.primary_btn, False, False, 0)
-        self.secondary_btn = Gtk.Button(label="Выбрать локацию")
+        self.secondary_btn = Gtk.Button(label=_("Выбрать локацию"))
         self.secondary_btn.get_style_context().add_class("ghost")
         self.secondary_btn.connect("clicked", lambda *_: self.win.show_page("locations"))
         self.hero_buttons.pack_start(self.secondary_btn, False, False, 0)
-        self.fastest_btn = Gtk.Button(label="Лучшая оценка")
+        self.fastest_btn = Gtk.Button(label=_("Лучшая оценка"))
         self.fastest_btn.get_style_context().add_class("ghost")
         self.fastest_btn.set_tooltip_text(
-            "Подключиться к локации с лучшей оценкой AdGuard. Это не замер "
-            "скорости с этого компьютера."
+            _("Подключиться к локации с лучшей оценкой AdGuard. Это не замер "
+              "скорости с этого компьютера.")
         )
         self.fastest_btn.connect("clicked", lambda *_: self.win.connect_fastest())
         self.hero_buttons.pack_start(self.fastest_btn, False, False, 0)
@@ -160,13 +161,13 @@ class DashboardPage(Page):
         self.hero_city.set_ellipsize(Pango.EllipsizeMode.END)
         self.hero_city.set_max_width_chars(18)
         right.pack_start(self.hero_city, False, False, 0)
-        self.hero_country = label("Локация не выбрана", "small muted", xalign=0.5)
+        self.hero_country = label(_("Локация не выбрана"), "small muted", xalign=0.5)
         right.pack_start(self.hero_country, False, False, 0)
         self.hero_ping = pill("—", "accent")
         self.hero_ping.set_halign(Gtk.Align.CENTER)
         self.hero_ping.set_margin_top(2)
         right.pack_start(self.hero_ping, False, False, 0)
-        self.hero_ping_caption = label("реальный ping", "tiny muted", xalign=0.5)
+        self.hero_ping_caption = label(_("реальный ping"), "tiny muted", xalign=0.5)
         self.hero_ping_caption.set_halign(Gtk.Align.CENTER)
         self.hero_ping_caption.set_no_show_all(True)
         self.hero_ping_caption.set_visible(False)
@@ -175,10 +176,10 @@ class DashboardPage(Page):
         self.body.pack_start(self.hero, False, False, 0)
 
         # Stats ----------------------------------------------------------------
-        self.stat_session = StatTile("preferences-system-time-symbolic", "Сессия", "—")
-        self.stat_protocol = StatTile("network-wireless-symbolic", "Протокол", "Авто")
-        self.stat_mode = StatTile("security-high-symbolic", "Режим", "TUN")
-        self.stat_dns = StatTile("network-server-symbolic", "DNS", "AdGuard")
+        self.stat_session = StatTile("preferences-system-time-symbolic", _("Сессия"), "—")
+        self.stat_protocol = StatTile("network-wireless-symbolic", _("Протокол"), _("Авто"))
+        self.stat_mode = StatTile("security-high-symbolic", _("Режим"), "TUN")
+        self.stat_dns = StatTile("network-server-symbolic", _("DNS"), "AdGuard")
         stats_row = responsive_flow()
         for stat in (self.stat_session, self.stat_protocol, self.stat_mode, self.stat_dns):
             stat.set_hexpand(True)
@@ -187,16 +188,16 @@ class DashboardPage(Page):
 
         # Quick locations ------------------------------------------------------
         quick_head = hbox(8)
-        quick_head.pack_start(section_label("Ближайшие локации"), False, False, 0)
-        quick_head.pack_end(self._link_button("Все локации", "locations"), False, False, 0)
+        quick_head.pack_start(section_label(_("Ближайшие локации")), False, False, 0)
+        quick_head.pack_end(self._link_button(_("Все локации"), "locations"), False, False, 0)
         self.body.pack_start(quick_head, False, False, 0)
         self.quick_container = responsive_flow()
         self.body.pack_start(self.quick_container, False, False, 0)
 
         # Activity -------------------------------------------------------------
         activity_head = hbox(8)
-        activity_head.pack_start(section_label("Последние события"), False, False, 0)
-        activity_head.pack_end(self._link_button("Журнал", "logs"), False, False, 0)
+        activity_head.pack_start(section_label(_("Последние события")), False, False, 0)
+        activity_head.pack_end(self._link_button(_("Журнал"), "logs"), False, False, 0)
         self.body.pack_start(activity_head, False, False, 0)
         self.activity_card = card(spacing=10)
         self.activity_box = vbox(10)
@@ -229,48 +230,48 @@ class DashboardPage(Page):
         last = self.win.store.last_location or {}
         loc = self.win.current_location()
         if connected:
-            self.hero_title.set_text("Вы под защитой")
+            self.hero_title.set_text(_("Вы под защитой"))
             where = loc.title if loc else (status.location if status else None) or last.get("city")
-            self.hero_sub.set_text(
-                f"Трафик идёт через {where}." if where
-                else "Защищённый туннель установлен."
-            )
-            self.primary_btn.set_label("Отключить")
+            if where:
+                self.hero_sub.set_text(_("Трафик идёт через {where}.").format(where=where))
+            else:
+                self.hero_sub.set_text(_("Защищённый туннель установлен."))
+            self.primary_btn.set_label(_("Отключить"))
             self.primary_btn.get_style_context().remove_class("primary")
             self.primary_btn.get_style_context().add_class("danger")
-            self.secondary_btn.set_label("Сменить локацию")
+            self.secondary_btn.set_label(_("Сменить локацию"))
         elif state == "connecting":
-            self.hero_title.set_text("Подключаемся…")
+            self.hero_title.set_text(_("Подключаемся…"))
             target = loc.title if loc else (last.get("city") or "VPN")
             self.hero_sub.set_text(
-                f"Устанавливаем защищённый туннель: {target}. "
-                "Если откроется окно — введите пароль администратора."
+                _("Устанавливаем защищённый туннель: {target}. "
+                  "Если откроется окно — введите пароль администратора.").format(target=target)
             )
-            self.primary_btn.set_label("Подключение…")
+            self.primary_btn.set_label(_("Подключение…"))
             self.primary_btn.get_style_context().remove_class("danger")
             self.primary_btn.get_style_context().add_class("primary")
-            self.secondary_btn.set_label("Сменить локацию")
+            self.secondary_btn.set_label(_("Сменить локацию"))
         elif state == "disconnecting":
-            self.hero_title.set_text("Отключаемся…")
-            self.hero_sub.set_text("Останавливаем защищённый туннель.")
-            self.primary_btn.set_label("Отключение…")
+            self.hero_title.set_text(_("Отключаемся…"))
+            self.hero_sub.set_text(_("Останавливаем защищённый туннель."))
+            self.primary_btn.set_label(_("Отключение…"))
             self.primary_btn.get_style_context().remove_class("danger")
             self.primary_btn.get_style_context().add_class("primary")
-            self.secondary_btn.set_label("Локации")
+            self.secondary_btn.set_label(_("Локации"))
         elif state == "unknown":
-            self.hero_title.set_text("Статус неизвестен")
-            self.hero_sub.set_text("CLI не сообщил состояние. Нажмите «Обновить».")
-            self.primary_btn.set_label("Подключиться")
+            self.hero_title.set_text(_("Статус неизвестен"))
+            self.hero_sub.set_text(_("CLI не сообщил состояние. Нажмите «Обновить»."))
+            self.primary_btn.set_label(_("Подключиться"))
             self.primary_btn.get_style_context().remove_class("danger")
             self.primary_btn.get_style_context().add_class("primary")
-            self.secondary_btn.set_label("Выбрать локацию")
+            self.secondary_btn.set_label(_("Выбрать локацию"))
         else:
-            self.hero_title.set_text("VPN отключён")
-            self.hero_sub.set_text("Ваш IP-адрес и трафик не защищены.")
-            self.primary_btn.set_label("Подключиться")
+            self.hero_title.set_text(_("VPN отключён"))
+            self.hero_sub.set_text(_("Ваш IP-адрес и трафик не защищены."))
+            self.primary_btn.set_label(_("Подключиться"))
             self.primary_btn.get_style_context().remove_class("danger")
             self.primary_btn.get_style_context().add_class("primary")
-            self.secondary_btn.set_label("Выбрать локацию")
+            self.secondary_btn.set_label(_("Выбрать локацию"))
 
         self.primary_btn.set_sensitive(not busy)
         self.fastest_btn.set_sensitive(not busy and bool(self.win.locations))
@@ -279,17 +280,20 @@ class DashboardPage(Page):
         if loc:
             self.hero_flag.set_text(loc.flag)
             self.hero_city.set_text(loc.title)
-            self.hero_country.set_text(loc.subtitle or "Локация")
+            self.hero_country.set_text(loc.subtitle or _("Локация"))
         elif last:
             self.hero_flag.set_text(util.flag_emoji(last.get("iso", "")))
             self.hero_city.set_text(last.get("city") or "—")
-            self.hero_country.set_text(
-                ("Последняя · " + (last.get("country") or "")) if last.get("country") else "Последняя локация"
-            )
+            if last.get("country"):
+                self.hero_country.set_text(
+                    _("Последняя · {country}").format(country=last.get("country"))
+                )
+            else:
+                self.hero_country.set_text(_("Последняя локация"))
         else:
             self.hero_flag.set_text("🌐")
-            self.hero_city.set_text("Локация")
-            self.hero_country.set_text("не выбрана")
+            self.hero_city.set_text(_("Локация"))
+            self.hero_country.set_text(_("не выбрана"))
 
         # The badge is a measurement only: for the active tunnel it shows the
         # endpoint ping from tunnel.log.  AdGuard's estimate is never printed
@@ -299,66 +303,102 @@ class DashboardPage(Page):
             ctx.remove_class(cls)
         if connected:
             endpoint = self.win.real_endpoint()
-            real = endpoint.ping if endpoint is not None else None
-            self.hero_ping.set_text(util.human_ping(real))
-            if real is None:
-                ctx.add_class("pill-warn")
-            else:
-                kind = {"ping-good": "accent", "ping-mid": "warn", "ping-bad": "danger"}.get(
-                    util.ping_class(real), "accent"
-                )
-                ctx.add_class(f"pill-{kind}")
-            self.hero_ping_caption.set_visible(endpoint is not None)
+            history = None
+            if endpoint is None and loc is not None:
+                # tunnel.log may contain many DNS lines after the endpoint
+                # line.  Show a dated historical measurement instead of "—",
+                # but never AdGuard's estimate as if it were measured here.
+                history = self.win.endpoint_history.get(loc)
             if endpoint is not None:
-                tip = "Реальный замер при подключении."
+                real = endpoint.ping
+                self.hero_ping.set_text(util.human_ping(real))
+                if real is None:
+                    ctx.add_class("pill-warn")
+                else:
+                    kind = {"ping-good": "accent", "ping-mid": "warn", "ping-bad": "danger"}.get(
+                        util.ping_class(real), "accent"
+                    )
+                    ctx.add_class(f"pill-{kind}")
+                self.hero_ping_caption.set_text(_("реальный ping"))
+                self.hero_ping_caption.set_visible(True)
+                tip = _("Реальный замер при подключении.")
                 measured = util.measured_at_text(endpoint.measured_at)
                 if measured:
-                    tip = f"Реальный замер при подключении: {measured}"
+                    tip = _("Реальный замер при подключении: {time}").format(time=measured)
                 self.hero_ping.set_tooltip_text(
-                    f"{tip}\nСервер: {endpoint.name}\nАдрес: {endpoint.address}"
+                    _("{tip}\nСервер: {server}\nАдрес: {address}").format(
+                        tip=tip, server=endpoint.name, address=endpoint.address
+                    )
                 )
+            elif history is not None:
+                self.hero_ping.set_text(util.human_ping(history.ping))
+                kind = {"ping-good": "accent", "ping-mid": "warn", "ping-bad": "danger"}.get(
+                    util.ping_class(history.ping), "warn"
+                )
+                ctx.add_class(f"pill-{kind}")
+                self.hero_ping_caption.set_text(_("последний замер"))
+                self.hero_ping_caption.set_visible(True)
+                tip = _("Последний реальный замер: {ping}").format(
+                    ping=util.human_ping(history.ping)
+                )
+                measured = util.measured_at_text(history.measured_at)
+                if measured:
+                    tip += "\n" + _("Замер: {time}").format(time=measured)
+                if history.endpoint:
+                    tip += "\n" + _("Сервер: {name}").format(name=history.endpoint)
+                if history.address:
+                    tip += "\n" + _("Адрес: {address}").format(address=history.address)
+                tip += "\n" + _("Оценка AdGuard не выдаётся за измерение.")
+                self.hero_ping.set_tooltip_text(tip)
             else:
+                self.hero_ping.set_text("—")
+                ctx.add_class("pill-warn")
+                self.hero_ping_caption.set_visible(False)
                 self.hero_ping.set_tooltip_text(
-                    "Реальный ping сервера неизвестен: в журнале CLI нет записи "
-                    "о выбранном сервере. Оценка AdGuard не выдаётся за измерение."
+                    _("Реальный ping сервера неизвестен: в журнале CLI нет записи "
+                      "о выбранном сервере. Оценка AdGuard не выдаётся за измерение.")
                 )
         elif loc:
             self.hero_ping_caption.set_visible(False)
-            self.hero_ping.set_text("не подключено")
+            self.hero_ping.set_text(_("не подключено"))
             self.hero_ping.set_tooltip_text(
-                "VPN не подключён — реальный ping не измерялся."
+                _("VPN не подключён — реальный ping не измерялся.")
             )
             ctx.add_class("pill-warn")
         else:
             self.hero_ping_caption.set_visible(False)
             self.hero_ping.set_text("—")
-            self.hero_ping.set_tooltip_text("Локация не выбрана.")
+            self.hero_ping.set_tooltip_text(_("Локация не выбрана."))
             ctx.add_class("pill-accent")
 
         # Stats
         self.stat_session.set_value(self.win.session_text())
         self.stat_protocol.set_value({
-            "auto": "Авто", "http2": "HTTP/2", "quic": "QUIC",
-        }.get((self.win.config.values.get("protocol") if self.win.config else None) or "auto", "Авто"))
+            "auto": _("Авто"), "http2": "HTTP/2", "quic": "QUIC",
+        }.get((self.win.config.values.get("protocol") if self.win.config else None) or "auto", _("Авто")))
         self.stat_mode.set_value(
             "SOCKS" if (self.win.config and self.win.config.values.get("mode") == "socks") else "TUN"
         )
         dns = self.win.config.values.get("dns") if self.win.config else None
-        self.stat_dns.set_value("AdGuard" if not dns or dns == "default" else "Свой")
+        self.stat_dns.set_value("AdGuard" if not dns or dns == "default" else _("Свой"))
 
         self._refresh_quick()
         self._refresh_activity()
 
     def _refresh_quick(self) -> None:
-        fastest = self.win.locations[:4]
-        signature = tuple((loc.iso, loc.city, loc.ping) for loc in fastest)
+        fastest = self.win.quick_locations(4)
+        signature = (
+            tuple((loc.iso, loc.city, loc.ping) for loc in fastest),
+            tuple(self.win.store.favorite_keys),
+            tuple(self.win.store.recent_keys),
+        )
         if signature == self._quick_signature:
             return
         self._quick_signature = signature
         for child in list(self.quick_container.get_children()):
             self.quick_container.remove(child)
         if not fastest:
-            placeholder = label("Локации загрузятся, как только CLI ответит.", "muted small")
+            placeholder = label(_("Локации загрузятся, как только CLI ответит."), "muted small")
             placeholder.set_margin_top(4)
             self.quick_container.add(placeholder)
             self.quick_container.show_all()
@@ -372,17 +412,29 @@ class DashboardPage(Page):
             flag = label(loc.flag, "flag")
             child.pack_start(flag, False, False, 0)
             texts = vbox(1)
+            city_row = hbox(4)
             city = label(loc.title, "title-strong")
             city.set_ellipsize(Pango.EllipsizeMode.END)
             city.set_max_width_chars(14)
-            texts.pack_start(city, False, False, 0)
+            city_row.pack_start(city, False, False, 0)
+            if self.win.is_favorite(loc):
+                star = icon("starred-symbolic", 12)
+                star.get_style_context().add_class("favorite-star")
+                star.set_valign(Gtk.Align.CENTER)
+                star.set_tooltip_text(_("В избранном"))
+                city_row.pack_start(star, False, False, 0)
+            texts.pack_start(city_row, False, False, 0)
             texts.pack_start(label(loc.subtitle or " ", "tiny muted"), False, False, 0)
             child.pack_start(texts, True, True, 0)
             ping = label(util.human_estimate(loc.ping), f"tiny {util.ping_class(loc.ping)}")
             ping.set_tooltip_text(util.ESTIMATE_TOOLTIP)
             child.pack_end(ping, False, False, 0)
             btn.add(child)
-            btn.set_tooltip_text(f"{loc.title}, {loc.country}\n{util.ESTIMATE_TOOLTIP}")
+            btn.set_tooltip_text(
+                _("{title}, {country}\n{tooltip}").format(
+                    title=loc.title, country=loc.country, tooltip=util.ESTIMATE_TOOLTIP
+                )
+            )
             btn.connect("clicked", lambda _b, location=loc: self.win.connect_to(location))
             btn.set_hexpand(True)
             self.quick_container.add(btn)
@@ -398,7 +450,7 @@ class DashboardPage(Page):
             self.activity_box.remove(child)
         if not items:
             self.activity_box.pack_start(
-                label("Пока пусто. Подключение и смена локации появятся здесь.", "muted small"),
+                label(_("Пока пусто. Подключение и смена локации появятся здесь."), "muted small"),
                 False, False, 0,
             )
         else:
@@ -424,12 +476,12 @@ class LocationsPage(Page):
         refresh = Gtk.Button()
         refresh.set_image(icon("view-refresh-symbolic", 16))
         refresh.get_style_context().add_class("ghost")
-        refresh.set_tooltip_text("Обновить список локаций")
+        refresh.set_tooltip_text(_("Обновить список локаций"))
         refresh.connect("clicked", lambda *_: self.win.refresh_locations())
         self.body.pack_start(page_header(
-            "Локации",
-            "Список серверов AdGuard VPN. Значения — оценка AdGuard, "
-            "а не замер с этого компьютера.",
+            _("Локации"),
+            _("Список серверов AdGuard VPN. Значения — оценка AdGuard, "
+              "а не замер с этого компьютера."),
             refresh,
         ), False, False, 0)
 
@@ -437,16 +489,16 @@ class LocationsPage(Page):
         fastest_row = hbox(12)
         fastest_row.pack_start(icon("power-profile-performance-symbolic", 26), False, False, 0)
         texts = vbox(2)
-        texts.pack_start(label("Лучшая оценка AdGuard", "title-strong"), False, False, 0)
-        self.fastest_hint = label("Ближайшая по оценке AdGuard.", "small muted")
+        texts.pack_start(label(_("Лучшая оценка AdGuard"), "title-strong"), False, False, 0)
+        self.fastest_hint = label(_("Ближайшая по оценке AdGuard."), "small muted")
         self.fastest_hint.set_tooltip_text(util.ESTIMATE_TOOLTIP)
         texts.pack_start(self.fastest_hint, False, False, 0)
         fastest_row.pack_start(texts, True, True, 0)
-        self.fastest_btn = Gtk.Button(label="Подключиться")
+        self.fastest_btn = Gtk.Button(label=_("Подключиться"))
         self.fastest_btn.get_style_context().add_class("primary")
         self.fastest_btn.set_tooltip_text(
-            "Подключиться к локации с лучшей оценкой AdGuard. "
-            "Это не гарантия скорости с этого компьютера."
+            _("Подключиться к локации с лучшей оценкой AdGuard. "
+              "Это не гарантия скорости с этого компьютера.")
         )
         self.fastest_btn.connect("clicked", lambda *_: self.win.connect_fastest())
         fastest_row.pack_end(self.fastest_btn, False, False, 0)
@@ -455,13 +507,19 @@ class LocationsPage(Page):
 
         search_row = hbox(10)
         self.search = Gtk.SearchEntry()
-        self.search.set_placeholder_text("Поиск по городу, стране или ISO…")
+        self.search.set_placeholder_text(_("Поиск по городу, стране или ISO…"))
         self.search.get_style_context().add_class("search")
         self.search.set_hexpand(True)
         self.search.connect("search-changed", self._on_search)
         search_row.pack_start(self.search, True, True, 0)
         self.count_label = label("", "small muted")
         search_row.pack_end(self.count_label, False, False, 0)
+        self.favorites_toggle = Gtk.ToggleButton()
+        self.favorites_toggle.set_image(icon("starred-symbolic", 14))
+        self.favorites_toggle.get_style_context().add_class("favorite-toggle")
+        self.favorites_toggle.set_tooltip_text(_("Только избранные"))
+        self.favorites_toggle.connect("toggled", self._on_favorites_filter)
+        search_row.pack_end(self.favorites_toggle, False, False, 0)
         self.body.pack_start(search_row, False, False, 0)
 
         self.list_container = vbox(2)
@@ -471,6 +529,9 @@ class LocationsPage(Page):
         if self._debounce:
             GLib.source_remove(self._debounce)
         self._debounce = GLib.timeout_add(140, self._apply_filter)
+
+    def _on_favorites_filter(self, _button) -> None:
+        self._rebuild()
 
     def _apply_filter(self) -> bool:
         self._debounce = None
@@ -503,11 +564,23 @@ class LocationsPage(Page):
                 if needle in loc.city.lower() or needle in loc.country.lower()
                 or needle in loc.iso.lower()
             ]
-        self.count_label.set_text(f"{len(items)} из {len(self.win.locations)}")
+        only_favorites = self.favorites_toggle.get_active()
+        if only_favorites:
+            items = [loc for loc in items if self.win.is_favorite(loc)]
+        # Favourites stay on top, everything else keeps the current ping order.
+        items.sort(key=lambda loc: 0 if self.win.is_favorite(loc) else 1)
+        self.count_label.set_text(_("{shown} из {total}").format(
+            shown=len(items), total=len(self.win.locations)
+        ))
         rows = []
         for loc in items:
             is_current = bool(connected and locations.same_location(loc, current))
-            history = None if is_current else self.win.endpoint_history.get(loc)
+            if is_current and endpoint is not None:
+                history = None
+            else:
+                # For the active row without an endpoint in tunnel.log a dated
+                # history entry is still an honest last measurement.
+                history = self.win.endpoint_history.get(loc)
             rows.append((loc, is_current, history))
         signature = (
             tuple(
@@ -518,6 +591,8 @@ class LocationsPage(Page):
             ),
             (current.iso, current.city) if current else None,
             connected, busy, real_ping, endpoint_name, measured_at,
+            tuple(self.win.store.favorite_keys),
+            only_favorites, self._filter,
         )
         if signature == self._build_sig:
             return
@@ -525,9 +600,16 @@ class LocationsPage(Page):
         for child in list(self.list_container.get_children()):
             self.list_container.remove(child)
         if not items:
-            text = "Ничего не найдено. Измените запрос." if self._filter else "Локации ещё не загружены."
+            if only_favorites and not self._filter:
+                text = _("Нет избранных локаций. Отметьте нужные звёздочкой в списке.")
+            elif only_favorites:
+                text = _("Среди найденных локаций нет избранных.")
+            elif self._filter:
+                text = _("Ничего не найдено. Измените запрос.")
+            else:
+                text = _("Локации ещё не загружены.")
             self.list_container.pack_start(
-                EmptyState("find-location-symbolic", "Нет локаций", text), False, False, 20
+                EmptyState("find-location-symbolic", _("Нет локаций"), text), False, False, 20
             )
             self.list_container.show_all()
             return
@@ -545,6 +627,8 @@ class LocationsPage(Page):
                 history_measured_at=history.measured_at if history else None,
                 history_endpoint=history.endpoint if history else None,
                 history_address=history.address if history else None,
+                favorite=self.win.is_favorite(loc),
+                on_favorite=self.win.toggle_favorite,
             )
             self.list_container.pack_start(row, False, False, 0)
         self.list_container.show_all()
@@ -552,8 +636,9 @@ class LocationsPage(Page):
             fastest = self.win.locations[0]
             where = ", ".join(part for part in (fastest.title, fastest.subtitle) if part)
             self.fastest_hint.set_text(
-                f"Ближайшая по оценке AdGuard: {fastest.flag} {where} · "
-                f"{util.human_estimate(fastest.ping)}"
+                _("Ближайшая по оценке AdGuard: {flag} {where} · {ping}").format(
+                    flag=fastest.flag, where=where, ping=util.human_estimate(fastest.ping)
+                )
             )
         self.fastest_btn.set_sensitive(not busy and bool(self.win.locations))
 
@@ -577,16 +662,16 @@ class ExclusionsPage(Page):
         refresh.get_style_context().add_class("ghost")
         refresh.connect("clicked", lambda *_: self.win.load_exclusions(force=True))
         self.body.pack_start(page_header(
-            "Исключения",
-            "Сайты, которые обходят VPN или, наоборот, идут только через него.",
+            _("Исключения"),
+            _("Сайты, которые обходят VPN или, наоборот, идут только через него."),
             refresh,
         ), False, False, 0)
 
         mode_card = card(spacing=12)
         mode_top = hbox(12)
-        mode_top.pack_start(label("Режим исключений", "title-strong"), False, False, 0)
+        mode_top.pack_start(label(_("Режим исключений"), "title-strong"), False, False, 0)
         self.mode_control = SegmentedControl(
-            [("general", "Общий"), ("selective", "Выборочный")],
+            [("general", _("Общий")), ("selective", _("Выборочный"))],
             value="general",
             on_change=self._on_mode_change,
         )
@@ -597,41 +682,41 @@ class ExclusionsPage(Page):
         self.body.pack_start(mode_card, False, False, 0)
 
         add_card = card(spacing=10)
-        add_card.pack_start(label("Добавить сайт", "title-strong"), False, False, 0)
+        add_card.pack_start(label(_("Добавить сайт"), "title-strong"), False, False, 0)
         self.add_row = hbox(8)
         self.entry = Gtk.Entry()
         self.entry.set_placeholder_text("example.com, *.example.org, 10.0.0.0/8")
         self.entry.set_hexpand(True)
         self.entry.connect("activate", lambda *_: self._add())
         self.add_row.pack_start(self.entry, True, True, 0)
-        self.add_btn = Gtk.Button(label="Добавить")
+        self.add_btn = Gtk.Button(label=_("Добавить"))
         self.add_btn.get_style_context().add_class("primary")
         self.add_btn.connect("clicked", lambda *_: self._add())
         self.add_row.pack_end(self.add_btn, False, False, 0)
         add_card.pack_start(self.add_row, False, False, 0)
         self.add_card = add_card
         add_card.pack_start(
-            label("Можно ввести несколько адресов через запятую или пробел. "
-                  "Поддомены не добавляются автоматически — используйте *.", "tiny dim", wrap=True, max_width=78),
+            label(_("Можно ввести несколько адресов через запятую или пробел. "
+                    "Поддомены не добавляются автоматически — используйте *."), "tiny dim", wrap=True, max_width=78),
             False, False, 0,
         )
         self.body.pack_start(add_card, False, False, 0)
 
         block_card = card(spacing=10)
         block_card.pack_start(
-            label("Список сайтов, не любящих VPN", "title-strong"), False, False, 0
+            label(_("Список сайтов, не любящих VPN"), "title-strong"), False, False, 0
         )
         block_card.pack_start(
-            label("VPN защищает весь трафик, а сайты из списка открываются напрямую. "
-                  "Это нужно сервисам, которые не любят иностранные IP (например, ozon.ru). "
-                  "Источник — список UnRKN.", "small muted", wrap=True, max_width=78),
+            label(_("VPN защищает весь трафик, а сайты из списка открываются напрямую. "
+                    "Это нужно сервисам, которые не любят иностранные IP (например, ozon.ru). "
+                    "Источник — список UnRKN."), "small muted", wrap=True, max_width=78),
             False, False, 0,
         )
-        self.blocklist_status = label("Список не загружен.", "small muted", wrap=True, max_width=78)
+        self.blocklist_status = label(_("Список не загружен."), "small muted", wrap=True, max_width=78)
         block_card.pack_start(self.blocklist_status, False, False, 0)
         self.blocklist_hint = label(
-            "Сейчас выборочный режим: при применении будет включён общий, "
-            "иначе сайты из списка пойдут через VPN.", "tiny warn", wrap=True, max_width=78
+            _("Сейчас выборочный режим: при применении будет включён общий, "
+              "иначе сайты из списка пойдут через VPN."), "tiny warn", wrap=True, max_width=78
         )
         self.blocklist_hint.set_no_show_all(True)
         self.blocklist_hint.set_visible(False)
@@ -642,20 +727,20 @@ class ExclusionsPage(Page):
         self.blocklist_progress.set_visible(False)
         block_card.pack_start(self.blocklist_progress, False, False, 0)
         block_buttons = hbox(8)
-        self.blocklist_download_btn = Gtk.Button(label="Загрузить с GitHub")
+        self.blocklist_download_btn = Gtk.Button(label=_("Загрузить с GitHub"))
         self.blocklist_download_btn.set_tooltip_text(
-            "Скачать список UnRKN с GitHub. Приложение не обновляет его в фоне."
+            _("Скачать список UnRKN с GitHub. Приложение не обновляет его в фоне.")
         )
         self.blocklist_download_btn.connect("clicked", lambda *_: self.win.download_blocklist())
         block_buttons.pack_start(self.blocklist_download_btn, False, False, 0)
-        self.blocklist_apply_btn = Gtk.Button(label="Применить")
+        self.blocklist_apply_btn = Gtk.Button(label=_("Применить"))
         self.blocklist_apply_btn.get_style_context().add_class("primary")
         self.blocklist_apply_btn.set_tooltip_text(
-            "Добавить сайты в исключения общего режима: они будут открываться напрямую."
+            _("Добавить сайты в исключения общего режима: они будут открываться напрямую.")
         )
         self.blocklist_apply_btn.connect("clicked", lambda *_: self.win.apply_blocklist())
         block_buttons.pack_start(self.blocklist_apply_btn, False, False, 0)
-        self.blocklist_cancel_btn = Gtk.Button(label="Отмена")
+        self.blocklist_cancel_btn = Gtk.Button(label=_("Отмена"))
         self.blocklist_cancel_btn.get_style_context().add_class("danger")
         self.blocklist_cancel_btn.set_no_show_all(True)
         self.blocklist_cancel_btn.set_visible(False)
@@ -667,9 +752,9 @@ class ExclusionsPage(Page):
 
         list_card = card(spacing=10)
         list_head = hbox(8)
-        self.count = label("Список пуст", "title-strong")
+        self.count = label(_("Список пуст"), "title-strong")
         list_head.pack_start(self.count, False, False, 0)
-        self.clear_btn = Gtk.Button(label="Очистить")
+        self.clear_btn = Gtk.Button(label=_("Очистить"))
         self.clear_btn.get_style_context().add_class("danger")
         self.clear_btn.connect("clicked", lambda *_: self._clear())
         list_head.pack_end(self.clear_btn, False, False, 0)
@@ -677,8 +762,8 @@ class ExclusionsPage(Page):
         self.items_box = vbox(2)
         list_card.pack_start(self.items_box, False, False, 0)
         self.empty_box = EmptyState(
-            "channel-secure-symbolic", "Список пуст",
-            "Добавьте сайт, чтобы он работал по правилам выбранного режима."
+            "channel-secure-symbolic", _("Список пуст"),
+            _("Добавьте сайт, чтобы он работал по правилам выбранного режима.")
         )
         list_card.pack_start(self.empty_box, False, False, 10)
         self.body.pack_start(list_card, False, False, 0)
@@ -702,11 +787,11 @@ class ExclusionsPage(Page):
     def _update_mode_text(self) -> None:
         if self._mode == "selective":
             self.mode_desc.set_text(
-                "Выборочный: VPN включается только для сайтов из списка. Остальной трафик идёт напрямую."
+                _("Выборочный: VPN включается только для сайтов из списка. Остальной трафик идёт напрямую.")
             )
         else:
             self.mode_desc.set_text(
-                "Общий: VPN защищает весь трафик, кроме сайтов из списка исключений."
+                _("Общий: VPN защищает весь трафик, кроме сайтов из списка исключений.")
             )
         if hasattr(self, "blocklist_hint"):
             self.blocklist_hint.set_visible(
@@ -730,23 +815,26 @@ class ExclusionsPage(Page):
     def _render_blocklist(self) -> None:
         data = self._blocklist
         if data is not None:
-            text = (f"{data.count} доменов · загружен "
-                    f"{blocklist.fetched_text(data.fetched_at)}")
+            text = _("Доменов: {count} · загружен {when}").format(
+                count=data.count, when=blocklist.fetched_text(data.fetched_at)
+            )
             if data.raw_count and data.raw_count != data.count:
-                text += f" (из {data.raw_count} в источнике)"
+                text += " " + _("(из {count} в источнике)").format(count=data.raw_count)
             self.blocklist_status.set_text(text)
             self.blocklist_status.set_tooltip_text(
-                f"Источник: {data.source}\n"
-                "Если у бренда есть домен .ru, остальные зоны отброшены."
+                _("Источник: {source}\n"
+                  "Если у бренда есть домен .ru, остальные зоны отброшены.").format(
+                    source=data.source
+                )
             )
-            self.blocklist_download_btn.set_label("Обновить")
+            self.blocklist_download_btn.set_label(_("Обновить"))
         else:
             self.blocklist_status.set_text(
-                "Список не загружен. Нажмите «Загрузить с GitHub» — "
-                "приложение не обновляет его в фоне."
+                _("Список не загружен. Нажмите «Загрузить с GitHub» — "
+                  "приложение не обновляет его в фоне.")
             )
             self.blocklist_status.set_tooltip_text("")
-            self.blocklist_download_btn.set_label("Загрузить с GitHub")
+            self.blocklist_download_btn.set_label(_("Загрузить с GitHub"))
         self.blocklist_hint.set_visible(bool(data) and self._mode != "general")
         self._update_blocklist_buttons()
 
@@ -767,7 +855,7 @@ class ExclusionsPage(Page):
         self._blocklist_busy = kind
         if kind == "download":
             self.blocklist_progress.set_visible(False)
-            self.blocklist_status.set_text("Загружаем список с GitHub…")
+            self.blocklist_status.set_text(_("Загружаем список с GitHub…"))
         elif kind == "apply":
             self.blocklist_progress.set_visible(True)
             self.set_blocklist_progress(done, total)
@@ -782,23 +870,26 @@ class ExclusionsPage(Page):
         total = max(total, 0)
         fraction = (done / total) if total else 0.0
         self.blocklist_progress.set_fraction(min(max(fraction, 0.0), 1.0))
-        self.blocklist_progress.set_text(f"{done} из {total}")
-        self.blocklist_status.set_text(f"Добавляем сайты: {done} из {total}…")
+        self.blocklist_progress.set_text(_("{done} из {total}").format(done=done, total=total))
+        self.blocklist_status.set_text(
+            _("Добавляем сайты: {done} из {total}…").format(done=done, total=total)
+        )
 
     def mark_blocklist_cancelled(self) -> None:
         if self._blocklist_busy != "apply":
             return
-        self.blocklist_status.set_text("Останавливаем после текущей партии…")
+        self.blocklist_status.set_text(_("Останавливаем после текущей партии…"))
         self.blocklist_cancel_btn.set_sensitive(False)
 
     def _render(self) -> None:
         for child in list(self.items_box.get_children()):
             self.items_box.remove(child)
         self._row_buttons = []
-        self.count.set_text(
-            f"{len(self._items)} сайт" if len(self._items) == 1
-            else f"{len(self._items)} сайтов" if self._items else "Список пуст"
-        )
+        count = len(self._items)
+        if count:
+            self.count.set_text(ngettext("Сайт: {n}", "Сайтов: {n}", count).format(n=count))
+        else:
+            self.count.set_text(_("Список пуст"))
         self.empty_box.set_visible(not self._items)
         for domain in self._items:
             row = hbox(8)
@@ -811,7 +902,7 @@ class ExclusionsPage(Page):
             btn = Gtk.Button()
             btn.set_image(icon("edit-delete-symbolic", 15))
             btn.get_style_context().add_class("flat")
-            btn.set_tooltip_text("Удалить исключение")
+            btn.set_tooltip_text(_("Удалить исключение"))
             btn.connect("clicked", lambda _b, d=domain: self.win.remove_exclusion(d, self._mode))
             row.pack_end(btn, False, False, 0)
             self._row_buttons.append(btn)
@@ -832,11 +923,15 @@ class ExclusionsPage(Page):
             return
         domains = self._parse_domains()
         if not domains:
-            self.win.toast("Введите сайт", "Например, example.com", error=True)
+            self.win.toast(_("Введите сайт"), _("Например, example.com"), error=True)
             return
         bad = [domain for domain in domains if not DOMAIN_RE.match(domain)]
         if bad:
-            self.win.toast("Проверьте написание", "Не похоже на адрес: " + ", ".join(bad[:3]), error=True)
+            self.win.toast(
+                _("Проверьте написание"),
+                _("Не похоже на адрес: {domains}").format(domains=", ".join(bad[:3])),
+                error=True,
+            )
             return
         self._busy = True
         self._update_controls()
@@ -857,7 +952,7 @@ class ExclusionsPage(Page):
         self.mode_control.set_sensitive(state["mode"])
         for btn in self._row_buttons:
             btn.set_sensitive(state["rows"])
-        self.add_btn.set_label("Добавляем…" if self._busy else "Добавить")
+        self.add_btn.set_label(_("Добавляем…") if self._busy else _("Добавить"))
         if hasattr(self, "blocklist_download_btn"):
             self._update_blocklist_buttons()
 
@@ -875,12 +970,12 @@ class SettingsPage(Page):
         self._loading = True
 
         self.body.pack_start(page_header(
-            "Настройки",
-            "Параметры VPN и приложения. Сетевые изменения применяются при следующем подключении.",
+            _("Настройки"),
+            _("Параметры VPN и приложения. Сетевые изменения применяются при следующем подключении."),
         ), False, False, 0)
 
         # Connection ----------------------------------------------------------
-        self.body.pack_start(section_label("Подключение"), False, False, 0)
+        self.body.pack_start(section_label(_("Подключение")), False, False, 0)
         conn_card = card(spacing=0)
 
         self.mode_control = SegmentedControl(
@@ -888,60 +983,60 @@ class SettingsPage(Page):
             on_change=lambda value: self._change("mode", value),
         )
         conn_card.pack_start(setting_row(
-            "Режим работы", "TUN защищает весь трафик системы; SOCKS отдаёт локальный прокси.", self.mode_control
+            _("Режим работы"), _("TUN защищает весь трафик системы; SOCKS отдаёт локальный прокси."), self.mode_control
         ), False, False, 0)
 
         self.protocol_combo = self._combo(
-            [("auto", "Авто"), ("http2", "HTTP/2"), ("quic", "QUIC")],
+            [("auto", _("Авто")), ("http2", "HTTP/2"), ("quic", "QUIC")],
             lambda wid: self._change("protocol", wid.get_active_id()),
         )
         conn_card.pack_start(setting_row(
-            "Протокол", "Авто выбирает лучший вариант для сети.", self.protocol_combo
+            _("Протокол"), _("Авто выбирает лучший вариант для сети."), self.protocol_combo
         ), False, False, 0)
 
         self.post_quantum = Gtk.Switch()
         self.post_quantum.connect("notify::active", self._on_post_quantum)
         conn_card.pack_start(setting_row(
-            "Постквантовое шифрование",
-            "Дополнительная стойкость к будущим квантовым атакам.",
+            _("Постквантовое шифрование"),
+            _("Дополнительная стойкость к будущим квантовым атакам."),
             self.post_quantum,
         ), False, False, 0)
 
         self.system_dns = Gtk.Switch()
         self.system_dns.connect("notify::active", self._on_system_dns)
         conn_card.pack_start(setting_row(
-            "Менять системный DNS",
-            "При подключении AdGuard VPN подменяет DNS-серверы системы.",
+            _("Менять системный DNS"),
+            _("При подключении AdGuard VPN подменяет DNS-серверы системы."),
             self.system_dns,
         ), False, False, 0)
 
         self.routing_combo = self._combo(
-            [("auto", "Авто"), ("script", "Скрипт"), ("none", "Не менять")],
+            [("auto", _("Авто")), ("script", _("Скрипт")), ("none", _("Не менять"))],
             lambda wid: self._change("tun_routing_mode", wid.get_active_id()),
         )
         conn_card.pack_start(setting_row(
-            "Маршрутизация TUN",
-            "Способ добавления маршрутов. «Не менять» требует внешней настройки.",
+            _("Маршрутизация TUN"),
+            _("Способ добавления маршрутов. «Не менять» требует внешней настройки."),
             self.routing_combo,
         ), False, False, 0)
 
         dns_control = hbox(6)
         self.dns_entry = Gtk.Entry()
         self.dns_entry.set_width_chars(20)
-        self.dns_entry.set_placeholder_text("По умолчанию")
+        self.dns_entry.set_placeholder_text(_("По умолчанию"))
         self.dns_entry.connect("activate", lambda *_: self._apply_dns())
         dns_control.pack_start(self.dns_entry, False, False, 0)
-        apply_dns = Gtk.Button(label="Применить")
+        apply_dns = Gtk.Button(label=_("Применить"))
         apply_dns.get_style_context().add_class("ghost")
         apply_dns.connect("clicked", lambda *_: self._apply_dns())
         dns_control.pack_start(apply_dns, False, False, 0)
-        default_dns = Gtk.Button(label="Сброс")
+        default_dns = Gtk.Button(label=_("Сброс"))
         default_dns.get_style_context().add_class("flat")
-        default_dns.set_tooltip_text("Вернуть DNS AdGuard")
+        default_dns.set_tooltip_text(_("Вернуть DNS AdGuard"))
         default_dns.connect("clicked", lambda *_: self._set_default_dns())
         dns_control.pack_start(default_dns, False, False, 0)
         conn_card.pack_start(setting_row(
-            "DNS-сервер", "Адрес своего DNS или «По умолчанию» — серверы AdGuard.",
+            _("DNS-сервер"), _("Адрес своего DNS или «По умолчанию» — серверы AdGuard."),
             dns_control,
         ), False, False, 0)
 
@@ -955,100 +1050,123 @@ class SettingsPage(Page):
         socks_control.pack_start(self.socks_host, False, False, 0)
         socks_control.pack_start(label(":", "muted"), False, False, 0)
         socks_control.pack_start(self.socks_port, False, False, 0)
-        socks_apply = Gtk.Button(label="Применить")
+        socks_apply = Gtk.Button(label=_("Применить"))
         socks_apply.get_style_context().add_class("ghost")
         socks_apply.connect("clicked", lambda *_: self._apply_socks())
         socks_control.pack_start(socks_apply, False, False, 0)
         conn_card.pack_start(setting_row(
-            "SOCKS-прокси", "Хост и порт локального прокси в режиме SOCKS.",
+            _("SOCKS-прокси"), _("Хост и порт локального прокси в режиме SOCKS."),
             socks_control, last=True,
         ), False, False, 0)
         self.body.pack_start(conn_card, False, False, 0)
 
         # Application ---------------------------------------------------------
-        self.body.pack_start(section_label("Приложение"), False, False, 0)
+        self.body.pack_start(section_label(_("Приложение")), False, False, 0)
         app_card = card(spacing=0)
 
         self.autostart = Gtk.Switch()
         self.autostart.connect("notify::active", self._on_autostart)
         app_card.pack_start(setting_row(
-            "Запускать при входе", "Приложение появится в трее при входе в систему.",
+            _("Запускать при входе"), _("Приложение появится в трее при входе в систему."),
             self.autostart,
+        ), False, False, 0)
+
+        self._connect_on_start_guard = False
+        self.connect_on_start = Gtk.Switch()
+        self.connect_on_start.connect("notify::active", self._on_connect_on_start)
+        app_card.pack_start(setting_row(
+            _("Подключать VPN при запуске"),
+            _("Приложение при старте подключится к последней или лучшей локации. "
+              "Может потребоваться пароль администратора."),
+            self.connect_on_start,
         ), False, False, 0)
 
         self.tray_switch = Gtk.Switch()
         self.tray_switch.connect("notify::active", self._on_tray)
         app_card.pack_start(setting_row(
-            "Сворачивать в трей", "Кнопка закрытия прячет окно, VPN продолжает работать.",
+            _("Сворачивать в трей"), _("Кнопка закрытия прячет окно, VPN продолжает работать."),
             self.tray_switch,
         ), False, False, 0)
 
         self.notifications = Gtk.Switch()
         self.notifications.connect("notify::active", self._on_notifications)
         app_card.pack_start(setting_row(
-            "Уведомления", "Сообщать о подключении и отключении, когда окно свёрнуто.",
+            _("Уведомления"), _("Сообщать о подключении и отключении, когда окно свёрнуто."),
             self.notifications, last=True,
         ), False, False, 0)
         self.body.pack_start(app_card, False, False, 0)
 
         # Privacy -------------------------------------------------------------
-        self.body.pack_start(section_label("Приватность и диагностика"), False, False, 0)
+        self.body.pack_start(section_label(_("Приватность и диагностика")), False, False, 0)
         privacy_card = card(spacing=0)
 
         self.telemetry = Gtk.Switch()
         self.telemetry.connect("notify::active", self._on_telemetry)
         privacy_card.pack_start(setting_row(
-            "Анонимная статистика", "Отправлять обезличенные данные об использовании.",
+            _("Анонимная статистика"), _("Отправлять обезличенные данные об использовании."),
             self.telemetry,
         ), False, False, 0)
 
         self.crash = Gtk.Switch()
         self.crash.connect("notify::active", self._on_crash)
         privacy_card.pack_start(setting_row(
-            "Отчёты о сбоях", "Отправлять разработчикам отчёты о падениях CLI.",
+            _("Отчёты о сбоях"), _("Отправлять разработчикам отчёты о падениях CLI."),
             self.crash,
         ), False, False, 0)
 
         self.debug = Gtk.Switch()
         self.debug.connect("notify::active", self._on_debug)
         privacy_card.pack_start(setting_row(
-            "Подробный журнал", "Больше деталей в логах службы. Полезно для диагностики.",
+            _("Подробный журнал"), _("Больше деталей в логах службы. Полезно для диагностики."),
             self.debug,
         ), False, False, 0)
 
         self.channel_combo = self._combo(
-            [("release", "Стабильный"), ("beta", "Бета"), ("nightly", "Nightly")],
+            [("release", _("Стабильный")), ("beta", _("Бета")), ("nightly", "Nightly")],
             lambda wid: self._change("update_channel", wid.get_active_id()),
         )
         privacy_card.pack_start(setting_row(
-            "Канал обновлений", "Ветка версий AdGuard VPN CLI.",
+            _("Канал обновлений"), _("Ветка версий AdGuard VPN CLI."),
             self.channel_combo, last=True,
         ), False, False, 0)
         self.body.pack_start(privacy_card, False, False, 0)
 
         # Maintenance ---------------------------------------------------------
-        self.body.pack_start(section_label("Обслуживание"), False, False, 0)
+        self.body.pack_start(section_label(_("Обслуживание")), False, False, 0)
         maint = card(spacing=12)
         row = hbox(8)
-        btn_update = Gtk.Button(label="Проверить обновления")
+        btn_update = Gtk.Button(label=_("Проверить обновления"))
         btn_update.get_style_context().add_class("ghost")
         btn_update.connect("clicked", lambda *_: self.win.check_updates())
         row.pack_start(btn_update, False, False, 0)
-        btn_logs = Gtk.Button(label="Журнал")
+        btn_update_cli = Gtk.Button(label=_("Обновить CLI"))
+        btn_update_cli.get_style_context().add_class("ghost")
+        btn_update_cli.set_tooltip_text(_("Установить новую версию adguardvpn-cli"))
+        btn_update_cli.connect("clicked", lambda *_: self.win.update_cli())
+        row.pack_start(btn_update_cli, False, False, 0)
+        btn_export = Gtk.Button(label=_("Экспорт журналов"))
+        btn_export.get_style_context().add_class("ghost")
+        btn_export.set_tooltip_text(_("Сохранить журналы CLI в ZIP-архив"))
+        btn_export.connect("clicked", lambda *_: self.win.export_logs())
+        row.pack_start(btn_export, False, False, 0)
+        maint.pack_start(row, False, False, 0)
+
+        tools_row = hbox(8)
+        btn_logs = Gtk.Button(label=_("Журнал"))
         btn_logs.get_style_context().add_class("ghost")
         btn_logs.connect("clicked", lambda *_: self.win.open_logs())
-        row.pack_start(btn_logs, False, False, 0)
-        btn_data = Gtk.Button(label="Папка данных")
+        tools_row.pack_start(btn_logs, False, False, 0)
+        btn_data = Gtk.Button(label=_("Папка данных"))
         btn_data.get_style_context().add_class("ghost")
         btn_data.connect("clicked", lambda *_: self.win.open_data_dir())
-        row.pack_start(btn_data, False, False, 0)
-        btn_diag = Gtk.Button(label="Диагностика")
+        tools_row.pack_start(btn_data, False, False, 0)
+        btn_diag = Gtk.Button(label=_("Диагностика"))
         btn_diag.get_style_context().add_class("ghost")
         btn_diag.connect("clicked", lambda *_: self.win.copy_diagnostics())
-        row.pack_start(btn_diag, False, False, 0)
-        maint.pack_start(row, False, False, 0)
+        tools_row.pack_start(btn_diag, False, False, 0)
+        maint.pack_start(tools_row, False, False, 0)
         maint.pack_start(label(
-            "Все параметры хранятся в adguardvpn-cli; приложение только вызывает официальный CLI.",
+            _("Все параметры хранятся в adguardvpn-cli; приложение только вызывает официальный CLI."),
             "tiny dim", wrap=True, max_width=78,
         ), False, False, 0)
         self.body.pack_start(maint, False, False, 0)
@@ -1093,6 +1211,28 @@ class SettingsPage(Page):
             return
         self.win.set_pref("minimize_to_tray", switch.get_active())
 
+    def _on_connect_on_start(self, switch, _pspec) -> None:
+        if self._loading or self._connect_on_start_guard:
+            return
+        enabled = switch.get_active()
+        if enabled:
+            confirmed = self.win.confirm(
+                _("Подключать VPN при запуске?"),
+                _("При старте приложение попробует подключиться к последней или лучшей "
+                  "локации. Для этого CLI может запросить пароль администратора через "
+                  "askpass — окно запроса появится, даже если приложение свёрнуто в трей."),
+                _("Включить"),
+            )
+            if not confirmed:
+                self._connect_on_start_guard = True
+                try:
+                    switch.set_active(False)
+                finally:
+                    self._connect_on_start_guard = False
+                self.win.set_pref("connect_on_start", False)
+                return
+        self.win.set_pref("connect_on_start", enabled)
+
     def _on_notifications(self, switch, _pspec) -> None:
         if self._loading:
             return
@@ -1110,7 +1250,7 @@ class SettingsPage(Page):
         host = self.socks_host.get_text().strip() or "127.0.0.1"
         port = self.socks_port.get_text().strip() or "1080"
         if not port.isdigit() or not (1 <= int(port) <= 65535):
-            self.win.toast("Неверный порт", "Порт должен быть числом от 1 до 65535.", error=True)
+            self.win.toast(_("Неверный порт"), _("Порт должен быть числом от 1 до 65535."), error=True)
             return
         self.win.apply_settings_sequence([
             ("socks_host", host),
@@ -1128,7 +1268,7 @@ class SettingsPage(Page):
             self._set_combo(self.routing_combo, values.get("routing_mode") or "auto")
             dns = values.get("dns") or "default"
             self.dns_entry.set_text("" if dns == "default" else str(dns))
-            self.dns_entry.set_placeholder_text("По умолчанию")
+            self.dns_entry.set_placeholder_text(_("По умолчанию"))
             self.socks_host.set_text(str(values.get("socks_host") or "127.0.0.1"))
             self.socks_port.set_text(str(values.get("socks_port") or "1080"))
             self._set_switch(self.telemetry, bool(values.get("telemetry")))
@@ -1136,6 +1276,7 @@ class SettingsPage(Page):
             self._set_switch(self.debug, bool(values.get("debug_logging")))
             self._set_combo(self.channel_combo, values.get("update_channel") or "release")
             self._set_switch(self.autostart, bool(prefs.get("autostart")))
+            self._set_switch(self.connect_on_start, bool(prefs.get("connect_on_start")))
             self._set_switch(self.tray_switch, bool(prefs.get("minimize_to_tray")) and tray_available)
             self.tray_switch.set_sensitive(tray_available)
             self._set_switch(self.notifications, bool(prefs.get("show_notifications")))
@@ -1161,18 +1302,18 @@ class AccountPage(Page):
     def __init__(self, win) -> None:
         super().__init__(win)
         self.body.pack_start(page_header(
-            "Аккаунт",
-            "Лицензия и вход в AdGuard VPN.",
+            _("Аккаунт"),
+            _("Лицензия и вход в AdGuard VPN."),
         ), False, False, 0)
 
         self.loading_card = card(spacing=10)
-        self.loading_label = label("Загружаем данные аккаунта…", "small muted")
+        self.loading_label = label(_("Загружаем данные аккаунта…"), "small muted")
         row = hbox(10)
         self.loading_spinner = Gtk.Spinner()
         row.pack_start(self.loading_spinner, False, False, 0)
         row.pack_start(self.loading_label, False, False, 0)
         self.loading_card.pack_start(row, False, False, 0)
-        retry = Gtk.Button(label="Повторить")
+        retry = Gtk.Button(label=_("Повторить"))
         retry.get_style_context().add_class("ghost")
         retry.set_halign(Gtk.Align.START)
         retry.connect("clicked", lambda *_: self.win.refresh_license())
@@ -1205,11 +1346,11 @@ class AccountPage(Page):
         self.detail = label("", "small muted", wrap=True, max_width=78)
         self.account_card.pack_start(self.detail, False, False, 0)
         actions = hbox(8)
-        self.refresh_btn = Gtk.Button(label="Обновить")
+        self.refresh_btn = Gtk.Button(label=_("Обновить"))
         self.refresh_btn.get_style_context().add_class("ghost")
         self.refresh_btn.connect("clicked", lambda *_: self.win.refresh_license())
         actions.pack_start(self.refresh_btn, False, False, 0)
-        self.logout_btn = Gtk.Button(label="Выйти")
+        self.logout_btn = Gtk.Button(label=_("Выйти"))
         self.logout_btn.get_style_context().add_class("danger")
         self.logout_btn.connect("clicked", lambda *_: self.win.confirm_logout())
         actions.pack_start(self.logout_btn, False, False, 0)
@@ -1217,29 +1358,29 @@ class AccountPage(Page):
         self.body.pack_start(self.account_card, False, False, 0)
 
         self.login_card = card(spacing=10)
-        self.login_card.pack_start(label("Вы не вошли в аккаунт", "title-strong"), False, False, 0)
+        self.login_card.pack_start(label(_("Вы не вошли в аккаунт"), "title-strong"), False, False, 0)
         self.login_card.pack_start(label(
-            "Вход выполняет официальный CLI: он откроет страницу AdGuard и попросит код. "
-            "Удобнее всего сделать это в терминале.",
+            _("Вход выполняет официальный CLI: он откроет страницу AdGuard и попросит код. "
+              "Удобнее всего сделать это в терминале."),
             "small muted", wrap=True, max_width=78,
         ), False, False, 0)
-        login_btn = Gtk.Button(label="Войти в терминале")
+        login_btn = Gtk.Button(label=_("Войти в терминале"))
         login_btn.get_style_context().add_class("primary")
         login_btn.set_halign(Gtk.Align.START)
         login_btn.connect("clicked", lambda *_: self.win.open_login_terminal())
         self.login_card.pack_start(login_btn, False, False, 0)
         self.body.pack_start(self.login_card, False, False, 0)
 
-        self.body.pack_start(section_label("О приложении"), False, False, 0)
+        self.body.pack_start(section_label(_("О приложении")), False, False, 0)
         about_card = card(spacing=10)
         self.about_label = label("", "small muted", wrap=True, max_width=78)
         about_card.pack_start(self.about_label, False, False, 0)
         about_actions = hbox(8)
-        about_btn = Gtk.Button(label="О программе")
+        about_btn = Gtk.Button(label=_("О программе"))
         about_btn.get_style_context().add_class("ghost")
         about_btn.connect("clicked", lambda *_: self.win.open_about())
         about_actions.pack_start(about_btn, False, False, 0)
-        diag_btn = Gtk.Button(label="Скопировать диагностику")
+        diag_btn = Gtk.Button(label=_("Скопировать диагностику"))
         diag_btn.get_style_context().add_class("ghost")
         diag_btn.connect("clicked", lambda *_: self.win.copy_diagnostics())
         about_actions.pack_start(diag_btn, False, False, 0)
@@ -1254,12 +1395,12 @@ class AccountPage(Page):
             self.login_card.set_visible(False)
             if self.win.license_error:
                 self.loading_label.set_text(
-                    "Не удалось получить лицензию. Проверьте интернет и нажмите «Повторить»."
+                    _("Не удалось получить лицензию. Проверьте интернет и нажмите «Повторить».")
                 )
                 self.loading_spinner.stop()
                 self.loading_retry.set_visible(True)
             else:
-                self.loading_label.set_text("Загружаем данные аккаунта…")
+                self.loading_label.set_text(_("Загружаем данные аккаунта…"))
                 self.loading_spinner.start()
                 self.loading_retry.set_visible(False)
             return
@@ -1276,18 +1417,22 @@ class AccountPage(Page):
             self.plan_pill.get_style_context().remove_class("pill-accent")
             self.plan_pill.get_style_context().add_class("pill-accent")
             self.devices.set_text(
-                f"до {lic.devices} устройств" if lic.devices else ""
+                _("Устройств: {count}").format(count=lic.devices) if lic.devices else ""
             )
             self.valid.set_text(
-                f"Подписка действует до {lic.valid_until}" if lic.valid_until else ""
+                _("Подписка действует до {date}").format(date=lic.valid_until)
+                if lic.valid_until else ""
             )
             self.detail.set_text(
-                "Аккаунт используется официальным CLI AdGuard VPN. "
-                "Пароль AdGuard здесь не хранится."
+                _("Аккаунт используется официальным CLI AdGuard VPN. "
+                  "Пароль AdGuard здесь не хранится.")
             )
         cli_version = self.win.cli_version or "…"
         self.about_label.set_text(
-            f"{util.APP_NAME} GUI {util.APP_VERSION}\n"
-            f"AdGuard VPN CLI {cli_version}\n"
-            f"Данные CLI: {self.win.cli_data_dir}"
+            _("{app} GUI {version}\n"
+              "AdGuard VPN CLI {cli}\n"
+              "Данные CLI: {data}").format(
+                app=util.APP_NAME, version=util.APP_VERSION,
+                cli=cli_version, data=self.win.cli_data_dir,
+            )
         )

@@ -1,0 +1,2111 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the AdGuard VPN GUI package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: AdGuard VPN GUI 1.2.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-11-22 11:08+1000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\n"
+
+#: agvpn/app.py:43 agvpn/app.py:468 agvpn/app.py:612 agvpn/pages.py:109
+msgid "Главная"
+msgstr ""
+
+#: agvpn/app.py:44 agvpn/app.py:613 agvpn/app.py:1258 agvpn/pages.py:260
+#: agvpn/pages.py:482
+msgid "Локации"
+msgstr ""
+
+#: agvpn/app.py:45 agvpn/app.py:614 agvpn/pages.py:665
+msgid "Исключения"
+msgstr ""
+
+#: agvpn/app.py:46 agvpn/app.py:615 agvpn/pages.py:973
+msgid "Настройки"
+msgstr ""
+
+#: agvpn/app.py:47 agvpn/app.py:616 agvpn/app.py:3384 agvpn/pages.py:1305
+msgid "Аккаунт"
+msgstr ""
+
+#: agvpn/app.py:476 agvpn/app.py:2455 agvpn/app.py:3096 agvpn/app.py:3328
+#: agvpn/askpass.py:305 agvpn/pages.py:743
+msgid "Отмена"
+msgstr ""
+
+#: agvpn/app.py:480
+msgid "Прервать подключение или отключение"
+msgstr ""
+
+#: agvpn/app.py:484
+msgid "Проверяем…"
+msgstr ""
+
+#: agvpn/app.py:493
+msgid "Обновить всё"
+msgstr ""
+
+#: agvpn/app.py:494 agvpn/pages.py:1138
+msgid "Проверить обновления"
+msgstr ""
+
+#: agvpn/app.py:496
+msgid "Журнал CLI"
+msgstr ""
+
+#: agvpn/app.py:497 agvpn/pages.py:1379
+msgid "О программе"
+msgstr ""
+
+#: agvpn/app.py:499 agvpn/app.py:1266
+msgid "Выход"
+msgstr ""
+
+#: agvpn/app.py:507
+msgid "Меню"
+msgstr ""
+
+#: agvpn/app.py:513
+msgid "Обновить статус"
+msgstr ""
+
+#: agvpn/app.py:556
+msgid "GUI для Linux"
+msgstr ""
+
+#: agvpn/app.py:569 agvpn/app.py:3390
+msgid "Проверяем статус…"
+msgstr ""
+
+#: agvpn/app.py:572 agvpn/app.py:3390
+msgid "Спрашиваем adguardvpn-cli"
+msgstr ""
+
+#: agvpn/app.py:581 agvpn/app.py:591 agvpn/app.py:3441 agvpn/pages.py:132
+#: agvpn/pages.py:267 agvpn/pages.py:274
+msgid "Выбрать локацию"
+msgstr ""
+
+#: agvpn/app.py:589 agvpn/app.py:3434 agvpn/app.py:3442
+msgid "ЛОКАЦИЯ"
+msgstr ""
+
+#: agvpn/app.py:595 agvpn/app.py:3438 agvpn/pages.py:363
+msgid "не подключено"
+msgstr ""
+
+#: agvpn/app.py:647 agvpn/app.py:3449
+msgid "Загружаем аккаунт…"
+msgstr ""
+
+#: agvpn/app.py:658
+#, python-brace-format
+msgid "v{version} · неофициальный GUI"
+msgstr ""
+
+#: agvpn/app.py:735 agvpn/app.py:3204
+msgid "Подробности"
+msgstr ""
+
+#: agvpn/app.py:1072
+msgid "Приложение свёрнуто в трей"
+msgstr ""
+
+#: agvpn/app.py:1073
+msgid "VPN продолжает работать. Значок приложения — в системном лотке."
+msgstr ""
+
+#: agvpn/app.py:1086
+msgid "Операция выполняется"
+msgstr ""
+
+#: agvpn/app.py:1087
+msgid "Прервать текущую операцию и закрыть приложение?"
+msgstr ""
+
+#: agvpn/app.py:1088 agvpn/app.py:2929 agvpn/pages.py:1353
+msgid "Выйти"
+msgstr ""
+
+#: agvpn/app.py:1245 agvpn/app.py:3403 agvpn/pages.py:262
+msgid "Статус неизвестен"
+msgstr ""
+
+#: agvpn/app.py:1249 agvpn/app.py:3562 agvpn/pages.py:128 agvpn/pages.py:264
+#: agvpn/pages.py:271 agvpn/pages.py:497
+msgid "Подключиться"
+msgstr ""
+
+#: agvpn/app.py:1252 agvpn/pages.py:136
+msgid "Лучшая оценка"
+msgstr ""
+
+#: agvpn/app.py:1254
+msgid "Подключиться к локации с лучшей оценкой AdGuard."
+msgstr ""
+
+#: agvpn/app.py:1262
+msgid "Открыть приложение"
+msgstr ""
+
+#: agvpn/app.py:1364 agvpn/app.py:3410 agvpn/app.py:3552
+msgid "CLI не отвечает"
+msgstr ""
+
+#: agvpn/app.py:1365
+msgid "Не удалось получить статус. Проверьте установку adguardvpn-cli."
+msgstr ""
+
+#: agvpn/app.py:1430
+msgid "VPN подключён"
+msgstr ""
+
+#: agvpn/app.py:1431
+#, python-brace-format
+msgid "Защищено: {where}"
+msgstr ""
+
+#: agvpn/app.py:1432 agvpn/pages.py:238
+msgid "Защищённый туннель установлен."
+msgstr ""
+
+#: agvpn/app.py:1437 agvpn/app.py:1778 agvpn/app.py:1977 agvpn/app.py:2702
+#: agvpn/pages.py:121 agvpn/pages.py:269
+msgid "VPN отключён"
+msgstr ""
+
+#: agvpn/app.py:1438 agvpn/app.py:1977
+msgid "Трафик снова идёт напрямую."
+msgstr ""
+
+#: agvpn/app.py:1515
+msgid "Добавлено в избранное"
+msgstr ""
+
+#: agvpn/app.py:1515
+msgid "Убрано из избранного"
+msgstr ""
+
+#: agvpn/app.py:1552 agvpn/app.py:1563
+msgid "локации с лучшей оценкой"
+msgstr ""
+
+#: agvpn/app.py:1567 agvpn/app.py:2117 agvpn/app.py:2172 agvpn/app.py:2187
+#: agvpn/app.py:2228 agvpn/app.py:2392 agvpn/app.py:2992 agvpn/app.py:3084
+msgid "Подождите"
+msgstr ""
+
+#: agvpn/app.py:1567 agvpn/app.py:2117 agvpn/app.py:2172 agvpn/app.py:2187
+#: agvpn/app.py:2228 agvpn/app.py:2392 agvpn/app.py:2992 agvpn/app.py:3084
+msgid "Сейчас выполняется другая операция."
+msgstr ""
+
+#: agvpn/app.py:1576
+msgid "Уже подключено"
+msgstr ""
+
+#: agvpn/app.py:1597
+#, python-brace-format
+msgid "Переключаемся на {name}…"
+msgstr ""
+
+#: agvpn/app.py:1599 agvpn/app.py:1614
+#, python-brace-format
+msgid "Подключаемся к {name}…"
+msgstr ""
+
+#: agvpn/app.py:1658 agvpn/app.py:3541 agvpn/widgets.py:481
+msgid "Подключено"
+msgstr ""
+
+#: agvpn/app.py:1664
+msgid "Подключение продолжается"
+msgstr ""
+
+#: agvpn/app.py:1665
+msgid "Служба ещё запускается. Проверьте статус через несколько секунд."
+msgstr ""
+
+#: agvpn/app.py:1676
+msgid "Не удалось переключиться"
+msgstr ""
+
+#: agvpn/app.py:1677 agvpn/app.py:1779 agvpn/app.py:1818 agvpn/app.py:1828
+#: agvpn/app.py:2709
+#, python-brace-format
+msgid "Возвращаемся на {name}…"
+msgstr ""
+
+#: agvpn/app.py:1682
+msgid "VPN не подключился. Проверьте журнал и попробуйте другую локацию."
+msgstr ""
+
+#: agvpn/app.py:1683 agvpn/app.py:1684 agvpn/app.py:1746
+msgid "Не удалось подключиться"
+msgstr ""
+
+#: agvpn/app.py:1706 agvpn/app.py:1711 agvpn/app.py:1719 agvpn/app.py:1720
+#: agvpn/app.py:1735 agvpn/app.py:1737 agvpn/app.py:1890 agvpn/app.py:1891
+#: agvpn/cli.py:231
+msgid "Ввод пароля отменён"
+msgstr ""
+
+#: agvpn/app.py:1707 agvpn/app.py:1993
+msgid "VPN продолжает работать."
+msgstr ""
+
+#: agvpn/app.py:1712
+msgid "Переключение отменено. VPN продолжает работать."
+msgstr ""
+
+#: agvpn/app.py:1716
+#, python-brace-format
+msgid ""
+"VPN остался отключён — нажмите «Подключиться», чтобы вернуться на {name}."
+msgstr ""
+
+#: agvpn/app.py:1732 agvpn/app.py:1914 agvpn/app.py:1996
+msgid "Операция отменена"
+msgstr ""
+
+#: agvpn/app.py:1732 agvpn/app.py:1914 agvpn/app.py:1996
+msgid "Проверяем состояние VPN…"
+msgstr ""
+
+#: agvpn/app.py:1735
+msgid "VPN остался отключён."
+msgstr ""
+
+#: agvpn/app.py:1738
+msgid "VPN остался отключён. Нажмите «Подключиться», чтобы повторить."
+msgstr ""
+
+#: agvpn/app.py:1786 agvpn/app.py:1866
+#, python-brace-format
+msgid "Остались на {name}"
+msgstr ""
+
+#: agvpn/app.py:1787
+msgid "Подключение не изменилось."
+msgstr ""
+
+#: agvpn/app.py:1792
+msgid "новая локация"
+msgstr ""
+
+#: agvpn/app.py:1794
+msgid "Переключение уже завершилось"
+msgstr ""
+
+#: agvpn/app.py:1795
+#, python-brace-format
+msgid "Текущая локация: {name}."
+msgstr ""
+
+#: agvpn/app.py:1801
+msgid "предыдущей локации"
+msgstr ""
+
+#: agvpn/app.py:1809
+#, python-brace-format
+msgid ""
+"Сейчас выполняется другая операция. Нажмите «Подключиться», чтобы вернуться "
+"на {name}."
+msgstr ""
+
+#: agvpn/app.py:1812 agvpn/app.py:1813
+msgid "Возврат отложен"
+msgstr ""
+
+#: agvpn/app.py:1819
+msgid "Восстанавливаем подключение."
+msgstr ""
+
+#: agvpn/app.py:1867
+msgid "Подключение восстановлено."
+msgstr ""
+
+#: agvpn/app.py:1870
+msgid ""
+"VPN остаётся отключён. Нажмите «Подключиться», чтобы повторить, или выберите "
+"другую локацию."
+msgstr ""
+
+#: agvpn/app.py:1872 agvpn/app.py:1897
+#, python-brace-format
+msgid "Не удалось вернуться на {name}"
+msgstr ""
+
+#: agvpn/app.py:1887
+#, python-brace-format
+msgid ""
+"VPN остаётся отключён. Нажмите «Подключиться», чтобы вернуться на {name}."
+msgstr ""
+
+#: agvpn/app.py:1896
+msgid "VPN остаётся отключён. Нажмите «Подключиться», чтобы повторить. "
+msgstr ""
+
+#: agvpn/app.py:1949
+msgid "Отключаем VPN…"
+msgstr ""
+
+#: agvpn/app.py:1980 agvpn/app.py:2001
+msgid "Не удалось отключиться"
+msgstr ""
+
+#: agvpn/app.py:1981
+msgid "Служба всё ещё активна. Попробуйте ещё раз или проверьте журнал."
+msgstr ""
+
+#: agvpn/app.py:1993
+msgid "Отключение отменено"
+msgstr ""
+
+#: agvpn/app.py:2022
+msgid "Локация временно недоступна. Выберите другую."
+msgstr ""
+
+#: agvpn/app.py:2024
+msgid "Войдите в аккаунт AdGuard на странице «Аккаунт»."
+msgstr ""
+
+#: agvpn/app.py:2026
+msgid "Ввод пароля был отменён."
+msgstr ""
+
+#: agvpn/app.py:2083
+msgid "Лицензия недоступна"
+msgstr ""
+
+#: agvpn/app.py:2083
+msgid "Не удалось получить данные аккаунта."
+msgstr ""
+
+#: agvpn/app.py:2109
+msgid "Настройки недоступны"
+msgstr ""
+
+#: agvpn/app.py:2109
+msgid "Не удалось прочитать конфигурацию CLI."
+msgstr ""
+
+#: agvpn/app.py:2121
+msgid "Обновляем список локаций…"
+msgstr ""
+
+#: agvpn/app.py:2133
+msgid "Список обновлён"
+msgstr ""
+
+#: agvpn/app.py:2134
+#, python-brace-format
+msgid "Доступна локация: {n}"
+msgid_plural "Доступно локаций: {n}"
+msgstr[0] ""
+msgstr[1] ""
+
+#: agvpn/app.py:2149
+msgid "Не удалось получить локации"
+msgstr ""
+
+#: agvpn/app.py:2150
+msgid "Проверьте интернет и повторите попытку."
+msgstr ""
+
+#: agvpn/app.py:2160 agvpn/app.py:3034
+#, python-brace-format
+msgid "GUI для Linux · CLI {version}"
+msgstr ""
+
+#: agvpn/app.py:2166
+msgid "GUI для Linux · CLI ?"
+msgstr ""
+
+#: agvpn/app.py:2196
+msgid "Применяем настройку…"
+msgstr ""
+
+#: agvpn/app.py:2219
+msgid "Не удалось изменить настройку"
+msgstr ""
+
+#: agvpn/app.py:2220
+msgid "CLI отклонил изменение. Текущее значение восстановлено ниже."
+msgstr ""
+
+#: agvpn/app.py:2233
+msgid "Применяем настройки…"
+msgstr ""
+
+#: agvpn/app.py:2249
+msgid "Изменения применятся при следующем подключении."
+msgstr ""
+
+#: agvpn/app.py:2249
+msgid "Настройки сохранены"
+msgstr ""
+
+#: agvpn/app.py:2254
+msgid "Не удалось изменить настройки"
+msgstr ""
+
+#: agvpn/app.py:2255
+msgid "CLI отклонил изменение. Проверьте значения и повторите попытку."
+msgstr ""
+
+#: agvpn/app.py:2264
+msgid "Не удалось изменить автозапуск"
+msgstr ""
+
+#: agvpn/app.py:2265
+msgid "Проверьте права на ~/.config/autostart."
+msgstr ""
+
+#: agvpn/app.py:2272
+msgid "Трей недоступен"
+msgstr ""
+
+#: agvpn/app.py:2273
+msgid "Индикатор не создался в этой сессии — сворачивание отключено."
+msgstr ""
+
+#: agvpn/app.py:2361
+#, python-brace-format
+msgid "Загружен {n} домен"
+msgid_plural "Загружено доменов: {n}"
+msgstr[0] ""
+msgstr[1] ""
+
+#: agvpn/app.py:2364 agvpn/pages.py:822
+#, python-brace-format
+msgid "(из {count} в источнике)"
+msgstr ""
+
+#: agvpn/app.py:2368
+msgid "Список загружен"
+msgstr ""
+
+#: agvpn/app.py:2369
+#, python-brace-format
+msgid "{count}. Нажмите «Применить», чтобы добавить их в исключения."
+msgstr ""
+
+#: agvpn/app.py:2380
+msgid "Не удалось загрузить список"
+msgstr ""
+
+#: agvpn/app.py:2384 agvpn/cli.py:253
+msgid "Проверьте интернет-соединение и повторите попытку."
+msgstr ""
+
+#: agvpn/app.py:2396
+msgid "Список не загружен"
+msgstr ""
+
+#: agvpn/app.py:2397
+msgid "Сначала нажмите «Загрузить с GitHub»."
+msgstr ""
+
+#: agvpn/app.py:2400
+msgid "Список ещё загружается"
+msgstr ""
+
+#: agvpn/app.py:2401
+msgid "Дождитесь загрузки текущих исключений и повторите."
+msgstr ""
+
+#: agvpn/app.py:2405
+msgid "Включить общий режим?"
+msgstr ""
+
+#: agvpn/app.py:2406
+msgid ""
+"Список UnRKN предназначен для общего режима: VPN защищает весь трафик, а "
+"сайты из списка открываются напрямую. Сейчас включён выборочный режим — при "
+"применении он будет заменён на общий."
+msgstr ""
+
+#: agvpn/app.py:2409
+msgid "Переключить и применить"
+msgstr ""
+
+#: agvpn/app.py:2419
+msgid "Добавить сайты в исключения?"
+msgstr ""
+
+#: agvpn/app.py:2420
+#, python-brace-format
+msgid ""
+"Будет добавлено сайтов: {count}. VPN продолжит защищать весь остальной "
+"трафик."
+msgstr ""
+
+#: agvpn/app.py:2422 agvpn/pages.py:692 agvpn/pages.py:955
+msgid "Добавить"
+msgstr ""
+
+#: agvpn/app.py:2429 agvpn/app.py:2439
+msgid "Применить список?"
+msgstr ""
+
+#: agvpn/app.py:2444
+#, python-brace-format
+msgid ""
+"В списке доменов: {domains}. В общем режиме сейчас исключений: {existing}.\n"
+"\n"
+"«Добавить к текущим» сохранит ваши сайты и пропустит уже добавленные. "
+"«Заменить список» удалит текущие исключения, включая добавленные вручную."
+msgstr ""
+
+#: agvpn/app.py:2456
+msgid "Заменить список"
+msgstr ""
+
+#: agvpn/app.py:2458
+msgid "Добавить к текущим"
+msgstr ""
+
+#: agvpn/app.py:2477
+msgid "Применяем список сайтов…"
+msgstr ""
+
+#: agvpn/app.py:2528 agvpn/app.py:2535 agvpn/app.py:2544 agvpn/app.py:2577
+#: agvpn/app.py:2589
+msgid "Применение остановлено"
+msgstr ""
+
+#: agvpn/app.py:2529
+msgid ""
+"Список был очищен, но новые сайты не добавлены. Нажмите «Применить», чтобы "
+"заполнить его."
+msgstr ""
+
+#: agvpn/app.py:2536
+#, python-brace-format
+msgid "Список заменён частично: добавлено {added} из {total}. Можно повторить."
+msgstr ""
+
+#: agvpn/app.py:2545
+#, python-brace-format
+msgid ""
+"Добавлено {added} из {total}. Список исключений перечитан; можно повторить."
+msgstr ""
+
+#: agvpn/app.py:2553
+msgid "Список заменён"
+msgstr ""
+
+#: agvpn/app.py:2554
+#, python-brace-format
+msgid "Исключений в общем режиме: {count}."
+msgstr ""
+
+#: agvpn/app.py:2561
+msgid "Список уже применён"
+msgstr ""
+
+#: agvpn/app.py:2562
+#, python-brace-format
+msgid "Сайтов уже в исключениях: {count}."
+msgstr ""
+
+#: agvpn/app.py:2569 agvpn/app.py:2577
+msgid "Список применён"
+msgstr ""
+
+#: agvpn/app.py:2570
+#, python-brace-format
+msgid "Добавлено: {added}; всего исключений: {total}."
+msgstr ""
+
+#: agvpn/app.py:2590
+msgid "Список исключений перечитан."
+msgstr ""
+
+#: agvpn/app.py:2594
+msgid "Не удалось применить список"
+msgstr ""
+
+#: agvpn/app.py:2636
+msgid "Не удалось загрузить исключения"
+msgstr ""
+
+#: agvpn/app.py:2703
+msgid "Нажмите «Подключиться», чтобы восстановить защиту."
+msgstr ""
+
+#: agvpn/app.py:2708
+msgid "Восстанавливаем VPN"
+msgstr ""
+
+#: agvpn/app.py:2721
+msgid "Исключения применены"
+msgstr ""
+
+#: agvpn/app.py:2726
+msgid ""
+"Не удалось проверить состояние VPN. Проверьте статус или нажмите "
+"«Подключиться»."
+msgstr ""
+
+#: agvpn/app.py:2738
+msgid "VPN отключился. Нажмите «Подключиться», чтобы восстановить защиту."
+msgstr ""
+
+#: agvpn/app.py:2745
+#, python-brace-format
+msgid ""
+"VPN отключился. Дождитесь завершения текущей операции и нажмите "
+"«Подключиться», чтобы вернуться на {name}."
+msgstr ""
+
+#: agvpn/app.py:2752
+msgid "Переподключаем VPN…"
+msgstr ""
+
+#: agvpn/app.py:2783
+msgid "Добавлено"
+msgstr ""
+
+#: agvpn/app.py:2783
+#, python-brace-format
+msgid "Исключений: {count}"
+msgstr ""
+
+#: agvpn/app.py:2821
+msgid "Исключение удалено"
+msgstr ""
+
+#: agvpn/app.py:2835
+msgid "Очистить список исключений?"
+msgstr ""
+
+#: agvpn/app.py:2837
+#, python-brace-format
+msgid ""
+"Будет удалён {count} сайт в текущем режиме. Это действие нельзя отменить."
+msgid_plural ""
+"Будут удалены сайты в текущем режиме: {count}. Это действие нельзя отменить."
+msgstr[0] ""
+msgstr[1] ""
+
+#: agvpn/app.py:2841 agvpn/pages.py:757
+msgid "Очистить"
+msgstr ""
+
+#: agvpn/app.py:2868
+msgid "Исключений больше нет."
+msgstr ""
+
+#: agvpn/app.py:2868
+msgid "Список очищен"
+msgstr ""
+
+#: agvpn/app.py:2894
+msgid ""
+"Вход выполнен. Вернитесь в приложение и нажмите «Обновить» на странице "
+"аккаунта."
+msgstr ""
+
+#: agvpn/app.py:2897
+#, python-brace-format
+msgid "Не удалось войти (код {code})."
+msgstr ""
+
+#: agvpn/app.py:2905
+msgid "Нажмите любую клавишу, чтобы закрыть…"
+msgstr ""
+
+#: agvpn/app.py:2914
+msgid "Вход в аккаунт"
+msgstr ""
+
+#: agvpn/app.py:2915
+#, python-brace-format
+msgid ""
+"Не удалось открыть терминал. Выполните команду вручную:\n"
+"\n"
+"{binary} login\n"
+"\n"
+"После входа нажмите «Обновить» на странице аккаунта."
+msgstr ""
+
+#: agvpn/app.py:2922
+msgid "Завершите вход и вернитесь в приложение."
+msgstr ""
+
+#: agvpn/app.py:2922
+msgid "Открыли терминал"
+msgstr ""
+
+#: agvpn/app.py:2926
+msgid "Выйти из аккаунта?"
+msgstr ""
+
+#: agvpn/app.py:2927
+msgid ""
+"CLI отключит VPN и удалит локальную сессию AdGuard. Чтобы снова включить "
+"защиту, потребуется войти заново."
+msgstr ""
+
+#: agvpn/app.py:2934
+msgid "Выполняем выход…"
+msgstr ""
+
+#: agvpn/app.py:2939
+msgid "Вы вышли из аккаунта"
+msgstr ""
+
+#: agvpn/app.py:2939
+msgid "Локальная сессия удалена."
+msgstr ""
+
+#: agvpn/app.py:2953
+msgid "Не удалось выйти из аккаунта"
+msgstr ""
+
+#: agvpn/app.py:2965
+msgid "Проверяем обновления…"
+msgstr ""
+
+#: agvpn/app.py:2973
+msgid "Доступно обновление AdGuard VPN CLI"
+msgstr ""
+
+#: agvpn/app.py:2974
+#, python-brace-format
+msgid ""
+"{details}\n"
+"\n"
+"Обновление устанавливается официальной командой:\n"
+"sudo adguardvpn-cli update\n"
+"\n"
+"После обновления перезапустите приложение."
+msgstr ""
+
+#: agvpn/app.py:2979 agvpn/app.py:3003
+msgid "Обновлений нет"
+msgstr ""
+
+#: agvpn/app.py:2979 agvpn/app.py:3004
+msgid "Установлена актуальная версия AdGuard VPN CLI."
+msgstr ""
+
+#: agvpn/app.py:2997
+msgid "Проверяем обновления CLI…"
+msgstr ""
+
+#: agvpn/app.py:3008
+msgid ""
+"Будет запущена официальная команда обновления CLI. Потребуется пароль "
+"администратора."
+msgstr ""
+
+#: agvpn/app.py:3013 agvpn/app.py:3248 agvpn/pages.py:830 agvpn/pages.py:1349
+msgid "Обновить"
+msgstr ""
+
+#: agvpn/app.py:3013
+msgid "Обновить AdGuard VPN CLI?"
+msgstr ""
+
+#: agvpn/app.py:3029
+msgid "Обновляем AdGuard VPN CLI…"
+msgstr ""
+
+#: agvpn/app.py:3047
+msgid "CLI обновлён"
+msgstr ""
+
+#: agvpn/app.py:3047
+msgid "Проверяем новую версию…"
+msgstr ""
+
+#: agvpn/app.py:3054
+msgid "Ввод пароля отменён — CLI не изменён."
+msgstr ""
+
+#: agvpn/app.py:3055
+msgid "Обновление отменено"
+msgstr ""
+
+#: agvpn/app.py:3056
+msgid "Обновление CLI отменено"
+msgstr ""
+
+#: agvpn/app.py:3060 agvpn/app.py:3061
+msgid "Не удалось обновить CLI"
+msgstr ""
+
+#: agvpn/app.py:3067
+msgid "Перезапустить приложение?"
+msgstr ""
+
+#: agvpn/app.py:3068
+msgid ""
+"CLI обновлён. Чтобы новая версия точно вступила в силу, перезапустите "
+"приложение."
+msgstr ""
+
+#: agvpn/app.py:3070
+msgid "Перезапустить"
+msgstr ""
+
+#: agvpn/app.py:3073
+msgid "Не удалось перезапустить"
+msgstr ""
+
+#: agvpn/app.py:3074
+msgid "Закройте и откройте приложение вручную."
+msgstr ""
+
+#: agvpn/app.py:3078
+msgid "Перезапустите приложение"
+msgstr ""
+
+#: agvpn/app.py:3079
+msgid "Новая версия CLI вступит в силу после перезапуска."
+msgstr ""
+
+#: agvpn/app.py:3090 agvpn/pages.py:1147
+msgid "Экспорт журналов"
+msgstr ""
+
+#: agvpn/app.py:3097
+msgid "Экспортировать"
+msgstr ""
+
+#: agvpn/app.py:3113
+msgid "Архив ZIP"
+msgstr ""
+
+#: agvpn/app.py:3122
+msgid "Экспортируем журналы…"
+msgstr ""
+
+#: agvpn/app.py:3127
+msgid "Журналы экспортированы"
+msgstr ""
+
+#: agvpn/app.py:3134 agvpn/app.py:3135
+msgid "Не удалось экспортировать журналы"
+msgstr ""
+
+#: agvpn/app.py:3141
+msgid "Не удалось открыть папку"
+msgstr ""
+
+#: agvpn/app.py:3154
+msgid "Вставьте её в письмо или отчёт."
+msgstr ""
+
+#: agvpn/app.py:3154
+msgid "Диагностика скопирована"
+msgstr ""
+
+#: agvpn/app.py:3157
+msgid "Не удалось скопировать диагностику"
+msgstr ""
+
+#: agvpn/app.py:3233
+msgid "Копировать"
+msgstr ""
+
+#: agvpn/app.py:3241
+msgid "Скопировано"
+msgstr ""
+
+#: agvpn/app.py:3243
+msgid "Не удалось скопировать"
+msgstr ""
+
+#: agvpn/app.py:3261
+msgid "Закрыть"
+msgstr ""
+
+#: agvpn/app.py:3284
+msgid "Журнал пока пуст."
+msgstr ""
+
+#: agvpn/app.py:3286 agvpn/pages.py:200 agvpn/pages.py:1155
+msgid "Журнал"
+msgstr ""
+
+#: agvpn/app.py:3293
+msgid ""
+"Локальный графический интерфейс для официального adguardvpn-cli.\n"
+"Неофициальный проект, не связан с AdGuard Software Ltd."
+msgstr ""
+
+#: agvpn/app.py:3307 agvpn/pages.py:1163
+msgid "Диагностика"
+msgstr ""
+
+#: agvpn/app.py:3316
+msgid "Продолжить"
+msgstr ""
+
+#: agvpn/app.py:3370 agvpn/app.py:3371
+msgid "CLI не найден"
+msgstr ""
+
+#: agvpn/app.py:3370
+msgid "Установите adguardvpn-cli"
+msgstr ""
+
+#: agvpn/app.py:3374 agvpn/app.py:3400
+msgid "Останавливаем туннель"
+msgstr ""
+
+#: agvpn/app.py:3374 agvpn/app.py:3378 agvpn/app.py:3400 agvpn/app.py:3401
+#: agvpn/app.py:3547 agvpn/pages.py:257
+msgid "Отключение…"
+msgstr ""
+
+#: agvpn/app.py:3376
+msgid "Ожидаем VPN-службу"
+msgstr ""
+
+#: agvpn/app.py:3376 agvpn/app.py:3378 agvpn/app.py:3397 agvpn/app.py:3398
+#: agvpn/app.py:3547 agvpn/pages.py:250
+msgid "Подключение…"
+msgstr ""
+
+#: agvpn/app.py:3382
+msgid "Применяем настройки"
+msgstr ""
+
+#: agvpn/app.py:3382
+msgid "Сохраняем"
+msgstr ""
+
+#: agvpn/app.py:3383
+msgid "Загружаем список локаций"
+msgstr ""
+
+#: agvpn/app.py:3383
+msgid "Обновляем"
+msgstr ""
+
+#: agvpn/app.py:3384
+msgid "Выполняем операцию"
+msgstr ""
+
+#: agvpn/app.py:3385
+msgid "Ищем обновления"
+msgstr ""
+
+#: agvpn/app.py:3385
+msgid "Проверяем"
+msgstr ""
+
+#: agvpn/app.py:3386
+msgid "Собираем журналы"
+msgstr ""
+
+#: agvpn/app.py:3386
+msgid "Экспортируем"
+msgstr ""
+
+#: agvpn/app.py:3387
+msgid "Работаем…"
+msgstr ""
+
+#: agvpn/app.py:3388
+msgid "Подождите…"
+msgstr ""
+
+#: agvpn/app.py:3391
+msgid "Проверка…"
+msgstr ""
+
+#: agvpn/app.py:3394 agvpn/app.py:3395
+msgid "Защищено"
+msgstr ""
+
+#: agvpn/app.py:3394
+msgid "Туннель активен"
+msgstr ""
+
+#: agvpn/app.py:3397
+msgid "Устанавливаем туннель"
+msgstr ""
+
+#: agvpn/app.py:3403
+msgid "Нажмите «Обновить»"
+msgstr ""
+
+#: agvpn/app.py:3404
+msgid "Неизвестно"
+msgstr ""
+
+#: agvpn/app.py:3406
+msgid "VPN выключен"
+msgstr ""
+
+#: agvpn/app.py:3406
+msgid "Трафик идёт напрямую"
+msgstr ""
+
+#: agvpn/app.py:3407
+msgid "Выключено"
+msgstr ""
+
+#: agvpn/app.py:3435 agvpn/pages.py:283 agvpn/pages.py:295
+msgid "Локация"
+msgstr ""
+
+#: agvpn/app.py:3437
+msgid "ПОСЛЕДНЯЯ"
+msgstr ""
+
+#: agvpn/app.py:3443 agvpn/pages.py:296
+msgid "не выбрана"
+msgstr ""
+
+#: agvpn/app.py:3450
+msgid "Аккаунт недоступен"
+msgstr ""
+
+#: agvpn/app.py:3461
+msgid "Войти в аккаунт"
+msgstr ""
+
+#: agvpn/app.py:3462
+msgid "нет аккаунта"
+msgstr ""
+
+#: agvpn/app.py:3504 agvpn/widgets.py:497
+#, python-brace-format
+msgid "Подключиться: {title}, {country}"
+msgstr ""
+
+#: agvpn/app.py:3512
+msgid "Избранное"
+msgstr ""
+
+#: agvpn/app.py:3516
+msgid "Последние"
+msgstr ""
+
+#: agvpn/app.py:3518
+msgid "Нет избранных"
+msgstr ""
+
+#: agvpn/app.py:3522
+msgid "Все локации…"
+msgstr ""
+
+#: agvpn/app.py:3544
+#, python-brace-format
+msgid "Подключено: {name}"
+msgstr ""
+
+#: agvpn/app.py:3550
+msgid "Отключено"
+msgstr ""
+
+#: agvpn/app.py:3562
+msgid "Отключиться"
+msgstr ""
+
+#: agvpn/app.py:3598
+msgid "Внутренняя ошибка"
+msgstr ""
+
+#: agvpn/app.py:3599
+msgid "Приложение продолжает работу. Подробности записаны в журнал."
+msgstr ""
+
+#: agvpn/app.py:3610 agvpn/cli.py:228
+msgid "Не найден adguardvpn-cli"
+msgstr ""
+
+#: agvpn/app.py:3611
+msgid ""
+"Установите официальный AdGuard VPN CLI, затем перезапустите приложение. "
+"Интерфейс продолжит работать, но не сможет управлять VPN."
+msgstr ""
+
+#: agvpn/app.py:3613
+msgid ""
+"Ожидаемый путь: /usr/local/bin/adguardvpn-cli\n"
+"Скачать: https://adguard-vpn.com/ru/download.html"
+msgstr ""
+
+#: agvpn/askpass.py:209 agvpn/askpass.py:213 agvpn/askpass.py:275
+msgid "Пароль администратора"
+msgstr ""
+
+#: agvpn/askpass.py:247
+msgid "Нужен пароль администратора"
+msgstr ""
+
+#: agvpn/askpass.py:250
+#, python-brace-format
+msgid "AdGuard VPN запустит защищённую службу от имени пользователя {user}."
+msgstr ""
+
+#: agvpn/askpass.py:267
+msgid "Похоже, пароль не подошёл. Попробуйте ещё раз."
+msgstr ""
+
+#: agvpn/askpass.py:286
+msgid "Показать пароль"
+msgstr ""
+
+#: agvpn/askpass.py:289
+msgid "Включён Caps Lock"
+msgstr ""
+
+#: agvpn/askpass.py:298
+msgid ""
+"Пароль нужен только для запуска VPN-службы. Он не сохраняется приложением."
+msgstr ""
+
+#: agvpn/askpass.py:306
+msgid "Подтвердить"
+msgstr ""
+
+#: agvpn/askpass.py:332
+msgid "Введите пароль администратора."
+msgstr ""
+
+#: agvpn/blocklist.py:198
+#, python-brace-format
+msgid "GitHub ответил ошибкой {code}."
+msgstr ""
+
+#: agvpn/blocklist.py:203
+msgid "Не удалось связаться с GitHub. Проверьте интернет-соединение."
+msgstr ""
+
+#: agvpn/blocklist.py:208
+msgid "Не удалось загрузить список: истекло время ожидания."
+msgstr ""
+
+#: agvpn/blocklist.py:213
+msgid "Список с GitHub оказался неожиданно большим."
+msgstr ""
+
+#: agvpn/blocklist.py:219
+msgid "Список с GitHub повреждён (не UTF-8)."
+msgstr ""
+
+#: agvpn/blocklist.py:223
+msgid "В загруженном файле не нашлось доменов."
+msgstr ""
+
+#: agvpn/cli.py:225
+msgid "Подробности записаны в журнал приложения."
+msgstr ""
+
+#: agvpn/cli.py:225
+msgid "Что-то пошло не так"
+msgstr ""
+
+#: agvpn/cli.py:229
+msgid "Установите AdGuard VPN CLI: https://adguard-vpn.com/ru/download.html"
+msgstr ""
+
+#: agvpn/cli.py:232
+msgid ""
+"VPN остался отключён. Нажмите «Подключиться» и введите пароль "
+"администратора, чтобы попробовать снова."
+msgstr ""
+
+#: agvpn/cli.py:234
+msgid "Неверный пароль администратора"
+msgstr ""
+
+#: agvpn/cli.py:235
+msgid ""
+"Проверьте раскладку и Caps Lock, затем попробуйте ещё раз. Пароль не "
+"сохраняется."
+msgstr ""
+
+#: agvpn/cli.py:237
+msgid "Не удалось показать запрос пароля"
+msgstr ""
+
+#: agvpn/cli.py:238
+msgid ""
+"Запустите приложение внутри графической сессии (DISPLAY/Wayland) и повторите "
+"попытку."
+msgstr ""
+
+#: agvpn/cli.py:240
+msgid "Нужно войти в аккаунт AdGuard"
+msgstr ""
+
+#: agvpn/cli.py:241
+msgid "Откройте раздел «Аккаунт» и войдите — без аккаунта CLI не подключается."
+msgstr ""
+
+#: agvpn/cli.py:243
+msgid "Локация недоступна"
+msgstr ""
+
+#: agvpn/cli.py:244
+msgid "Выберите другую локацию. Возможно, сервер временно недоступен."
+msgstr ""
+
+#: agvpn/cli.py:246
+msgid "VPN-служба не запустилась"
+msgstr ""
+
+#: agvpn/cli.py:247
+msgid ""
+"Проверьте, что установлен пакет, создающий TUN-интерфейс, и повторите "
+"попытку. Подробности ниже."
+msgstr ""
+
+#: agvpn/cli.py:249
+msgid "Операция заняла слишком много времени"
+msgstr ""
+
+#: agvpn/cli.py:250
+msgid ""
+"Проверьте статус: возможно, подключение всё же установилось. Попробуйте "
+"обновить статус или отключиться."
+msgstr ""
+
+#: agvpn/cli.py:252
+msgid "Проблема с сетью"
+msgstr ""
+
+#: agvpn/cli.py:255
+msgid "Дождитесь завершения текущей операции и повторите."
+msgstr ""
+
+#: agvpn/cli.py:255
+msgid "Служба занята"
+msgstr ""
+
+#: agvpn/cli.py:256
+msgid "Не удалось выполнить команду"
+msgstr ""
+
+#: agvpn/cli.py:256
+msgid "Технические подробности — ниже."
+msgstr ""
+
+#: agvpn/cli.py:373
+msgid "Проверьте статус VPN — возможно, операция уже завершилась."
+msgstr ""
+
+#: agvpn/pages.py:110
+msgid "Состояние защиты и быстрый доступ к локациям."
+msgstr ""
+
+#: agvpn/pages.py:119
+msgid "СТАТУС ЗАЩИТЫ"
+msgstr ""
+
+#: agvpn/pages.py:123 agvpn/pages.py:270
+msgid "Ваш IP-адрес и трафик не защищены."
+msgstr ""
+
+#: agvpn/pages.py:139
+msgid ""
+"Подключиться к локации с лучшей оценкой AdGuard. Это не замер скорости с "
+"этого компьютера."
+msgstr ""
+
+#: agvpn/pages.py:164
+msgid "Локация не выбрана"
+msgstr ""
+
+#: agvpn/pages.py:170 agvpn/pages.py:322
+msgid "реальный ping"
+msgstr ""
+
+#: agvpn/pages.py:179
+msgid "Сессия"
+msgstr ""
+
+#: agvpn/pages.py:180 agvpn/pages.py:377 agvpn/pages.py:378 agvpn/pages.py:990
+#: agvpn/pages.py:1014
+msgid "Авто"
+msgstr ""
+
+#: agvpn/pages.py:180 agvpn/pages.py:994
+msgid "Протокол"
+msgstr ""
+
+#: agvpn/pages.py:181
+msgid "Режим"
+msgstr ""
+
+#: agvpn/pages.py:182
+msgid "DNS"
+msgstr ""
+
+#: agvpn/pages.py:191
+msgid "Ближайшие локации"
+msgstr ""
+
+#: agvpn/pages.py:192
+msgid "Все локации"
+msgstr ""
+
+#: agvpn/pages.py:199
+msgid "Последние события"
+msgstr ""
+
+#: agvpn/pages.py:233
+msgid "Вы под защитой"
+msgstr ""
+
+#: agvpn/pages.py:236
+#, python-brace-format
+msgid "Трафик идёт через {where}."
+msgstr ""
+
+#: agvpn/pages.py:239
+msgid "Отключить"
+msgstr ""
+
+#: agvpn/pages.py:242 agvpn/pages.py:253
+msgid "Сменить локацию"
+msgstr ""
+
+#: agvpn/pages.py:244
+msgid "Подключаемся…"
+msgstr ""
+
+#: agvpn/pages.py:247
+#, python-brace-format
+msgid ""
+"Устанавливаем защищённый туннель: {target}. Если откроется окно — введите "
+"пароль администратора."
+msgstr ""
+
+#: agvpn/pages.py:255
+msgid "Отключаемся…"
+msgstr ""
+
+#: agvpn/pages.py:256
+msgid "Останавливаем защищённый туннель."
+msgstr ""
+
+#: agvpn/pages.py:263
+msgid "CLI не сообщил состояние. Нажмите «Обновить»."
+msgstr ""
+
+#: agvpn/pages.py:289
+#, python-brace-format
+msgid "Последняя · {country}"
+msgstr ""
+
+#: agvpn/pages.py:292
+msgid "Последняя локация"
+msgstr ""
+
+#: agvpn/pages.py:324
+msgid "Реальный замер при подключении."
+msgstr ""
+
+#: agvpn/pages.py:327
+#, python-brace-format
+msgid "Реальный замер при подключении: {time}"
+msgstr ""
+
+#: agvpn/pages.py:329
+#, python-brace-format
+msgid ""
+"{tip}\n"
+"Сервер: {server}\n"
+"Адрес: {address}"
+msgstr ""
+
+#: agvpn/pages.py:339 agvpn/widgets.py:460
+msgid "последний замер"
+msgstr ""
+
+#: agvpn/pages.py:341 agvpn/widgets.py:406 agvpn/widgets.py:430
+#, python-brace-format
+msgid "Последний реальный замер: {ping}"
+msgstr ""
+
+#: agvpn/pages.py:346 agvpn/widgets.py:399 agvpn/widgets.py:411
+#: agvpn/widgets.py:435
+#, python-brace-format
+msgid "Замер: {time}"
+msgstr ""
+
+#: agvpn/pages.py:348 agvpn/widgets.py:401 agvpn/widgets.py:413
+#: agvpn/widgets.py:437
+#, python-brace-format
+msgid "Сервер: {name}"
+msgstr ""
+
+#: agvpn/pages.py:350 agvpn/widgets.py:415 agvpn/widgets.py:439
+#, python-brace-format
+msgid "Адрес: {address}"
+msgstr ""
+
+#: agvpn/pages.py:351
+msgid "Оценка AdGuard не выдаётся за измерение."
+msgstr ""
+
+#: agvpn/pages.py:358
+msgid ""
+"Реальный ping сервера неизвестен: в журнале CLI нет записи о выбранном "
+"сервере. Оценка AdGuard не выдаётся за измерение."
+msgstr ""
+
+#: agvpn/pages.py:365
+msgid "VPN не подключён — реальный ping не измерялся."
+msgstr ""
+
+#: agvpn/pages.py:371
+msgid "Локация не выбрана."
+msgstr ""
+
+#: agvpn/pages.py:383
+msgid "Свой"
+msgstr ""
+
+#: agvpn/pages.py:401
+msgid "Локации загрузятся, как только CLI ответит."
+msgstr ""
+
+#: agvpn/pages.py:424
+msgid "В избранном"
+msgstr ""
+
+#: agvpn/pages.py:434
+#, python-brace-format
+msgid ""
+"{title}, {country}\n"
+"{tooltip}"
+msgstr ""
+
+#: agvpn/pages.py:453
+msgid "Пока пусто. Подключение и смена локации появятся здесь."
+msgstr ""
+
+#: agvpn/pages.py:479
+msgid "Обновить список локаций"
+msgstr ""
+
+#: agvpn/pages.py:483
+msgid ""
+"Список серверов AdGuard VPN. Значения — оценка AdGuard, а не замер с этого "
+"компьютера."
+msgstr ""
+
+#: agvpn/pages.py:492
+msgid "Лучшая оценка AdGuard"
+msgstr ""
+
+#: agvpn/pages.py:493
+msgid "Ближайшая по оценке AdGuard."
+msgstr ""
+
+#: agvpn/pages.py:500
+msgid ""
+"Подключиться к локации с лучшей оценкой AdGuard. Это не гарантия скорости с "
+"этого компьютера."
+msgstr ""
+
+#: agvpn/pages.py:510
+msgid "Поиск по городу, стране или ISO…"
+msgstr ""
+
+#: agvpn/pages.py:520
+msgid "Только избранные"
+msgstr ""
+
+#: agvpn/pages.py:572
+#, python-brace-format
+msgid "{shown} из {total}"
+msgstr ""
+
+#: agvpn/pages.py:604
+msgid "Нет избранных локаций. Отметьте нужные звёздочкой в списке."
+msgstr ""
+
+#: agvpn/pages.py:606
+msgid "Среди найденных локаций нет избранных."
+msgstr ""
+
+#: agvpn/pages.py:608
+msgid "Ничего не найдено. Измените запрос."
+msgstr ""
+
+#: agvpn/pages.py:610
+msgid "Локации ещё не загружены."
+msgstr ""
+
+#: agvpn/pages.py:612
+msgid "Нет локаций"
+msgstr ""
+
+#: agvpn/pages.py:639
+#, python-brace-format
+msgid "Ближайшая по оценке AdGuard: {flag} {where} · {ping}"
+msgstr ""
+
+#: agvpn/pages.py:666
+msgid "Сайты, которые обходят VPN или, наоборот, идут только через него."
+msgstr ""
+
+#: agvpn/pages.py:672
+msgid "Режим исключений"
+msgstr ""
+
+#: agvpn/pages.py:674
+msgid "Выборочный"
+msgstr ""
+
+#: agvpn/pages.py:674
+msgid "Общий"
+msgstr ""
+
+#: agvpn/pages.py:685
+msgid "Добавить сайт"
+msgstr ""
+
+#: agvpn/pages.py:699
+msgid ""
+"Можно ввести несколько адресов через запятую или пробел. Поддомены не "
+"добавляются автоматически — используйте *."
+msgstr ""
+
+#: agvpn/pages.py:707
+msgid "Список сайтов, не любящих VPN"
+msgstr ""
+
+#: agvpn/pages.py:710
+msgid ""
+"VPN защищает весь трафик, а сайты из списка открываются напрямую. Это нужно "
+"сервисам, которые не любят иностранные IP (например, ozon.ru). Источник — "
+"список UnRKN."
+msgstr ""
+
+#: agvpn/pages.py:715
+msgid "Список не загружен."
+msgstr ""
+
+#: agvpn/pages.py:718
+msgid ""
+"Сейчас выборочный режим: при применении будет включён общий, иначе сайты из "
+"списка пойдут через VPN."
+msgstr ""
+
+#: agvpn/pages.py:730 agvpn/pages.py:837
+msgid "Загрузить с GitHub"
+msgstr ""
+
+#: agvpn/pages.py:732
+msgid "Скачать список UnRKN с GitHub. Приложение не обновляет его в фоне."
+msgstr ""
+
+#: agvpn/pages.py:736 agvpn/pages.py:1029 agvpn/pages.py:1053
+msgid "Применить"
+msgstr ""
+
+#: agvpn/pages.py:739
+msgid ""
+"Добавить сайты в исключения общего режима: они будут открываться напрямую."
+msgstr ""
+
+#: agvpn/pages.py:755 agvpn/pages.py:765 agvpn/pages.py:892
+msgid "Список пуст"
+msgstr ""
+
+#: agvpn/pages.py:766
+msgid "Добавьте сайт, чтобы он работал по правилам выбранного режима."
+msgstr ""
+
+#: agvpn/pages.py:790
+msgid ""
+"Выборочный: VPN включается только для сайтов из списка. Остальной трафик "
+"идёт напрямую."
+msgstr ""
+
+#: agvpn/pages.py:794
+msgid "Общий: VPN защищает весь трафик, кроме сайтов из списка исключений."
+msgstr ""
+
+#: agvpn/pages.py:818
+#, python-brace-format
+msgid "Доменов: {count} · загружен {when}"
+msgstr ""
+
+#: agvpn/pages.py:825
+#, python-brace-format
+msgid ""
+"Источник: {source}\n"
+"Если у бренда есть домен .ru, остальные зоны отброшены."
+msgstr ""
+
+#: agvpn/pages.py:833
+msgid ""
+"Список не загружен. Нажмите «Загрузить с GitHub» — приложение не обновляет "
+"его в фоне."
+msgstr ""
+
+#: agvpn/pages.py:858
+msgid "Загружаем список с GitHub…"
+msgstr ""
+
+#: agvpn/pages.py:873
+#, python-brace-format
+msgid "{done} из {total}"
+msgstr ""
+
+#: agvpn/pages.py:875
+#, python-brace-format
+msgid "Добавляем сайты: {done} из {total}…"
+msgstr ""
+
+#: agvpn/pages.py:881
+msgid "Останавливаем после текущей партии…"
+msgstr ""
+
+#: agvpn/pages.py:890
+#, python-brace-format
+msgid "Сайт: {n}"
+msgid_plural "Сайтов: {n}"
+msgstr[0] ""
+msgstr[1] ""
+
+#: agvpn/pages.py:905
+msgid "Удалить исключение"
+msgstr ""
+
+#: agvpn/pages.py:926
+msgid "Введите сайт"
+msgstr ""
+
+#: agvpn/pages.py:926
+msgid "Например, example.com"
+msgstr ""
+
+#: agvpn/pages.py:931
+msgid "Проверьте написание"
+msgstr ""
+
+#: agvpn/pages.py:932
+#, python-brace-format
+msgid "Не похоже на адрес: {domains}"
+msgstr ""
+
+#: agvpn/pages.py:955
+msgid "Добавляем…"
+msgstr ""
+
+#: agvpn/pages.py:974
+msgid ""
+"Параметры VPN и приложения. Сетевые изменения применяются при следующем "
+"подключении."
+msgstr ""
+
+#: agvpn/pages.py:978
+msgid "Подключение"
+msgstr ""
+
+#: agvpn/pages.py:986
+msgid "TUN защищает весь трафик системы; SOCKS отдаёт локальный прокси."
+msgstr ""
+
+#: agvpn/pages.py:986
+msgid "Режим работы"
+msgstr ""
+
+#: agvpn/pages.py:994
+msgid "Авто выбирает лучший вариант для сети."
+msgstr ""
+
+#: agvpn/pages.py:1000
+msgid "Постквантовое шифрование"
+msgstr ""
+
+#: agvpn/pages.py:1001
+msgid "Дополнительная стойкость к будущим квантовым атакам."
+msgstr ""
+
+#: agvpn/pages.py:1008
+msgid "Менять системный DNS"
+msgstr ""
+
+#: agvpn/pages.py:1009
+msgid "При подключении AdGuard VPN подменяет DNS-серверы системы."
+msgstr ""
+
+#: agvpn/pages.py:1014
+msgid "Не менять"
+msgstr ""
+
+#: agvpn/pages.py:1014
+msgid "Скрипт"
+msgstr ""
+
+#: agvpn/pages.py:1018
+msgid "Маршрутизация TUN"
+msgstr ""
+
+#: agvpn/pages.py:1019
+msgid "Способ добавления маршрутов. «Не менять» требует внешней настройки."
+msgstr ""
+
+#: agvpn/pages.py:1026 agvpn/pages.py:1271
+msgid "По умолчанию"
+msgstr ""
+
+#: agvpn/pages.py:1033
+msgid "Сброс"
+msgstr ""
+
+#: agvpn/pages.py:1035
+msgid "Вернуть DNS AdGuard"
+msgstr ""
+
+#: agvpn/pages.py:1039
+msgid "DNS-сервер"
+msgstr ""
+
+#: agvpn/pages.py:1039
+msgid "Адрес своего DNS или «По умолчанию» — серверы AdGuard."
+msgstr ""
+
+#: agvpn/pages.py:1058
+msgid "SOCKS-прокси"
+msgstr ""
+
+#: agvpn/pages.py:1058
+msgid "Хост и порт локального прокси в режиме SOCKS."
+msgstr ""
+
+#: agvpn/pages.py:1064
+msgid "Приложение"
+msgstr ""
+
+#: agvpn/pages.py:1070
+msgid "Запускать при входе"
+msgstr ""
+
+#: agvpn/pages.py:1070
+msgid "Приложение появится в трее при входе в систему."
+msgstr ""
+
+#: agvpn/pages.py:1078
+msgid "Подключать VPN при запуске"
+msgstr ""
+
+#: agvpn/pages.py:1079
+msgid ""
+"Приложение при старте подключится к последней или лучшей локации. Может "
+"потребоваться пароль администратора."
+msgstr ""
+
+#: agvpn/pages.py:1087
+msgid "Кнопка закрытия прячет окно, VPN продолжает работать."
+msgstr ""
+
+#: agvpn/pages.py:1087
+msgid "Сворачивать в трей"
+msgstr ""
+
+#: agvpn/pages.py:1094
+msgid "Сообщать о подключении и отключении, когда окно свёрнуто."
+msgstr ""
+
+#: agvpn/pages.py:1094
+msgid "Уведомления"
+msgstr ""
+
+#: agvpn/pages.py:1100
+msgid "Приватность и диагностика"
+msgstr ""
+
+#: agvpn/pages.py:1106
+msgid "Анонимная статистика"
+msgstr ""
+
+#: agvpn/pages.py:1106
+msgid "Отправлять обезличенные данные об использовании."
+msgstr ""
+
+#: agvpn/pages.py:1113
+msgid "Отправлять разработчикам отчёты о падениях CLI."
+msgstr ""
+
+#: agvpn/pages.py:1113
+msgid "Отчёты о сбоях"
+msgstr ""
+
+#: agvpn/pages.py:1120
+msgid "Больше деталей в логах службы. Полезно для диагностики."
+msgstr ""
+
+#: agvpn/pages.py:1120
+msgid "Подробный журнал"
+msgstr ""
+
+#: agvpn/pages.py:1125
+msgid "Бета"
+msgstr ""
+
+#: agvpn/pages.py:1125
+msgid "Стабильный"
+msgstr ""
+
+#: agvpn/pages.py:1129
+msgid "Ветка версий AdGuard VPN CLI."
+msgstr ""
+
+#: agvpn/pages.py:1129
+msgid "Канал обновлений"
+msgstr ""
+
+#: agvpn/pages.py:1135
+msgid "Обслуживание"
+msgstr ""
+
+#: agvpn/pages.py:1142
+msgid "Обновить CLI"
+msgstr ""
+
+#: agvpn/pages.py:1144
+msgid "Установить новую версию adguardvpn-cli"
+msgstr ""
+
+#: agvpn/pages.py:1149
+msgid "Сохранить журналы CLI в ZIP-архив"
+msgstr ""
+
+#: agvpn/pages.py:1159
+msgid "Папка данных"
+msgstr ""
+
+#: agvpn/pages.py:1169
+msgid ""
+"Все параметры хранятся в adguardvpn-cli; приложение только вызывает "
+"официальный CLI."
+msgstr ""
+
+#: agvpn/pages.py:1220
+msgid "Подключать VPN при запуске?"
+msgstr ""
+
+#: agvpn/pages.py:1221
+msgid ""
+"При старте приложение попробует подключиться к последней или лучшей локации. "
+"Для этого CLI может запросить пароль администратора через askpass — окно "
+"запроса появится, даже если приложение свёрнуто в трей."
+msgstr ""
+
+#: agvpn/pages.py:1224
+msgid "Включить"
+msgstr ""
+
+#: agvpn/pages.py:1253
+msgid "Неверный порт"
+msgstr ""
+
+#: agvpn/pages.py:1253
+msgid "Порт должен быть числом от 1 до 65535."
+msgstr ""
+
+#: agvpn/pages.py:1306
+msgid "Лицензия и вход в AdGuard VPN."
+msgstr ""
+
+#: agvpn/pages.py:1310 agvpn/pages.py:1403
+msgid "Загружаем данные аккаунта…"
+msgstr ""
+
+#: agvpn/pages.py:1316
+msgid "Повторить"
+msgstr ""
+
+#: agvpn/pages.py:1361
+msgid "Вы не вошли в аккаунт"
+msgstr ""
+
+#: agvpn/pages.py:1363
+msgid ""
+"Вход выполняет официальный CLI: он откроет страницу AdGuard и попросит код. "
+"Удобнее всего сделать это в терминале."
+msgstr ""
+
+#: agvpn/pages.py:1367
+msgid "Войти в терминале"
+msgstr ""
+
+#: agvpn/pages.py:1374
+msgid "О приложении"
+msgstr ""
+
+#: agvpn/pages.py:1383
+msgid "Скопировать диагностику"
+msgstr ""
+
+#: agvpn/pages.py:1398
+msgid "Не удалось получить лицензию. Проверьте интернет и нажмите «Повторить»."
+msgstr ""
+
+#: agvpn/pages.py:1420
+#, python-brace-format
+msgid "Устройств: {count}"
+msgstr ""
+
+#: agvpn/pages.py:1423
+#, python-brace-format
+msgid "Подписка действует до {date}"
+msgstr ""
+
+#: agvpn/pages.py:1427
+msgid ""
+"Аккаунт используется официальным CLI AdGuard VPN. Пароль AdGuard здесь не "
+"хранится."
+msgstr ""
+
+#: agvpn/pages.py:1432
+#, python-brace-format
+msgid ""
+"{app} GUI {version}\n"
+"AdGuard VPN CLI {cli}\n"
+"Данные CLI: {data}"
+msgstr ""
+
+#: agvpn/util.py:115
+msgid "Оценка AdGuard. Не измерение с этого компьютера."
+msgstr ""
+
+#: agvpn/util.py:116
+msgid "Реальный ping сервера из журнала CLI."
+msgstr ""
+
+#: agvpn/util.py:125
+#, python-brace-format
+msgid "{ping} мс"
+msgstr ""
+
+#: agvpn/util.py:132
+#, python-brace-format
+msgid "≈{ping} мс"
+msgstr ""
+
+#: agvpn/util.py:203
+msgid "только что"
+msgstr ""
+
+#: agvpn/util.py:205
+#, python-brace-format
+msgid "{minutes} мин назад"
+msgstr ""
+
+#: agvpn/util.py:207
+#, python-brace-format
+msgid "{hours} ч назад"
+msgstr ""
+
+#: agvpn/util.py:209
+msgid "вчера"
+msgstr ""
+
+#: agvpn/widgets.py:156 agvpn/widgets.py:168
+msgid "Подключить VPN"
+msgstr ""
+
+#: agvpn/widgets.py:168
+msgid "Отключить VPN"
+msgstr ""
+
+#: agvpn/widgets.py:419
+msgid ""
+"Реальный ping сервера неизвестен: в журнале CLI нет записи о выбранном "
+"сервере. Оценка AdGuard не подставляется."
+msgstr ""
+
+#: agvpn/widgets.py:450
+msgid "реальный"
+msgstr ""
+
+#: agvpn/widgets.py:477
+msgid "В избранном. ПКМ по строке — убрать из избранного."
+msgstr ""
+
+#: agvpn/widgets.py:483
+msgid "Подключить"
+msgstr ""
+
+#: agvpn/widgets.py:483
+msgid "Сменить"
+msgstr ""
+
+#: agvpn/widgets.py:491
+#, python-brace-format
+msgid "Уже подключено: {title}, {country}"
+msgstr ""
+
+#: agvpn/widgets.py:512
+msgid "Убрать из избранного"
+msgstr ""
+
+#: agvpn/widgets.py:514
+msgid "Добавить в избранное"
+msgstr ""
+
+#: agvpn/app.py: activity
+msgid "Локация изменена"
+msgstr ""
+
+#: agvpn/app.py: activity
+msgid "Загружен список UnRKN"
+msgstr ""
+
+#: agvpn/app.py: activity
+msgid "Применён список UnRKN"
+msgstr ""
+
+#: agvpn/app.py: activity
+msgid "Добавлены исключения"
+msgstr ""
+
+#: agvpn/app.py: activity
+msgid "Выход из аккаунта"
+msgstr ""
+
+#: agvpn/app.py: activity
+msgid "Обновлён AdGuard VPN CLI"
+msgstr ""
+
+#: agvpn/app.py: activity
+msgid "Экспортированы журналы"
+msgstr ""
+
+#: agvpn/app.py: activity
+msgid "Режим исключений изменён"
+msgstr ""
+
+#: agvpn/app.py: activity
+#, python-brace-format
+msgid "Доменов: {count}"
+msgstr ""
+
+#: agvpn/app.py: activity
+#, python-brace-format
+msgid "Добавлено: {added}"
+msgstr ""
+
+#: agvpn/app.py: autostart
+msgid "Графический интерфейс для AdGuard VPN CLI"
+msgstr ""

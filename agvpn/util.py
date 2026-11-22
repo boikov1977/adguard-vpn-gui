@@ -7,6 +7,7 @@ import logging
 import logging.handlers
 import os
 import re
+import shlex
 import shutil
 import subprocess
 import sys
@@ -15,9 +16,11 @@ import unicodedata
 from datetime import datetime
 from pathlib import Path
 
+from .i18n import _
+
 APP_NAME = "AdGuard VPN"
 APP_ID = "adguard-vpn-gui"
-APP_VERSION = "1.1.1"
+APP_VERSION = "1.2.0"
 
 PKG_DIR = Path(__file__).resolve().parent
 ASSETS_DIR = PKG_DIR / "assets"
@@ -40,18 +43,55 @@ def strip_ansi(text: str) -> str:
     return ANSI_RE.sub("", text or "").replace("\r\n", "\n").replace("\r", "\n")
 
 
+class _PrivateRotatingFileHandler(logging.handlers.RotatingFileHandler):
+    """Rotating file handler that keeps the log and its backups private.
+
+    RotatingFileHandler opens a fresh file after each rollover using the
+    process umask, so the 0600 mode applied at startup would be lost.
+    """
+
+    def _secure_files(self) -> None:
+        base = Path(self.baseFilename)
+        targets = [base]
+        targets += [
+            base.with_name(f"{base.name}.{i}")
+            for i in range(1, self.backupCount + 1)
+        ]
+        for path in targets:
+            try:
+                os.chmod(path, 0o600)
+            except OSError:
+                pass
+
+    def doRollover(self) -> None:
+        super().doRollover()
+        self._secure_files()
+
+
 def setup_logging(debug: bool = False) -> None:
     global _log_ready
     if _log_ready:
         return
-    STATE_DIR.mkdir(parents=True, exist_ok=True)
+    # Logs can contain server names and command output, so keep the directory
+    # private to the current user.  Best effort: a pre-existing directory may
+    # live on a filesystem that does not support chmod.
+    os.makedirs(STATE_DIR, mode=0o700, exist_ok=True)
+    try:
+        os.chmod(STATE_DIR, 0o700)
+    except OSError:
+        pass
     root = logging.getLogger()
     verbose = debug or bool(os.environ.get("AGVPN_GUI_DEBUG"))
     root.setLevel(logging.DEBUG if verbose else logging.INFO)
     fmt = logging.Formatter("%(asctime)s %(levelname)-7s %(name)s: %(message)s")
-    fh = logging.handlers.RotatingFileHandler(
-        STATE_DIR / "app.log", maxBytes=1_500_000, backupCount=2, encoding="utf-8"
+    log_path = STATE_DIR / "app.log"
+    fh = _PrivateRotatingFileHandler(
+        log_path, maxBytes=1_500_000, backupCount=2, encoding="utf-8"
     )
+    try:
+        os.chmod(log_path, 0o600)
+    except OSError:
+        pass
     fh.setFormatter(fmt)
     root.addHandler(fh)
     if debug or os.environ.get("AGVPN_GUI_DEBUG"):
@@ -72,8 +112,8 @@ def flag_emoji(iso: str) -> str:
     return chr(0x1F1E6 + ord(iso[0]) - ord("A")) + chr(0x1F1E6 + ord(iso[1]) - ord("A"))
 
 
-ESTIMATE_TOOLTIP = "Оценка AdGuard. Не измерение с этого компьютера."
-REAL_PING_TOOLTIP = "Реальный ping сервера из журнала CLI."
+ESTIMATE_TOOLTIP = _("Оценка AdGuard. Не измерение с этого компьютера.")
+REAL_PING_TOOLTIP = _("Реальный ping сервера из журнала CLI.")
 
 
 def human_ping(ping: int | None) -> str:
@@ -82,14 +122,14 @@ def human_ping(ping: int | None) -> str:
         return "—"
     if ping >= 9999:
         return "—"
-    return f"{ping} мс"
+    return _("{ping} мс").format(ping=ping)
 
 
 def human_estimate(ping: int | None) -> str:
     """Format AdGuard's estimate so it cannot be mistaken for a measurement."""
     if ping is None or ping >= 9999:
         return "—"
-    return f"≈{ping} мс"
+    return _("≈{ping} мс").format(ping=ping)
 
 
 def measured_at_text(dt: datetime | None) -> str:
@@ -160,13 +200,13 @@ def relative_time(ts: float | int | None) -> str:
         return ""
     delta = time.time() - float(ts)
     if delta < 45:
-        return "только что"
+        return _("только что")
     if delta < 3600:
-        return f"{int(delta // 60)} мин назад"
+        return _("{minutes} мин назад").format(minutes=int(delta // 60))
     if delta < 86400:
-        return f"{int(delta // 3600)} ч назад"
+        return _("{hours} ч назад").format(hours=int(delta // 3600))
     if delta < 172800:
-        return "вчера"
+        return _("вчера")
     return datetime.fromtimestamp(ts).strftime("%d.%m.%Y")
 
 
@@ -198,16 +238,72 @@ def desktop_env_ok() -> bool:
     return bool(os.environ.get("DISPLAY") or os.environ.get("WAYLAND_DISPLAY"))
 
 
+# Terminal emulators with the flag that separates the emulator's own options
+# from the command it should run.
+TERMINAL_ARGS = {
+    "gnome-terminal": ("--",),
+    "mate-terminal": ("-x",),
+    "xfce4-terminal": ("-x",),
+    # tilix documents -e/--command as a single command string; we pass the
+    # "bash -lc" pair, which works on the versions tested but may need
+    # revisiting if a future tilix release changes its option parser.
+    "tilix": ("-e",),
+    "konsole": ("-e",),
+    "kitty": ("-e",),
+    "alacritty": ("-e",),
+    "wezterm": ("start", "--"),
+    "xterm": ("-e",),
+}
+
+TERMINAL_CANDIDATES = (
+    "x-terminal-emulator",
+    "gnome-terminal",
+    "mate-terminal",
+    "xfce4-terminal",
+    "konsole",
+    "tilix",
+    "kitty",
+    "alacritty",
+    "wezterm",
+    "xterm",
+)
+
+# Flags a user may already have included in $TERMINAL.  If we see one of
+# these, only append the command instead of adding a second separator.
+TERMINAL_COMMAND_FLAGS = {"-e", "-x", "--command", "start", "--"}
+
+
+def _terminal_invocation(argv: list[str], path: str) -> list[str]:
+    """Build a terminal invocation for a user-provided $TERMINAL command."""
+    tail = list(argv[1:])
+    name = os.path.basename(argv[0]).lower()
+    if any(token in TERMINAL_COMMAND_FLAGS for token in tail):
+        # `wezterm start bash ...` needs the explicit `--` separator.
+        if name == "wezterm" and "start" in tail and "--" not in tail:
+            tail.append("--")
+        return [path, *tail, "bash", "-lc"]
+    flags = TERMINAL_ARGS.get(name, ("-e",))
+    return [path, *tail, *flags, "bash", "-lc"]
+
+
 def terminal_command() -> list[str] | None:
-    for candidate in ("x-terminal-emulator", "gnome-terminal", "mate-terminal", "xterm"):
+    # An explicit $TERMINAL wins over auto-detection.  It may contain its own
+    # arguments (for example "kitty --single-instance"); a malformed value
+    # falls back to the candidate list.
+    override = os.environ.get("TERMINAL", "").strip()
+    if override:
+        try:
+            argv = shlex.split(override)
+        except ValueError:
+            argv = []
+        if argv:
+            path = shutil.which(argv[0])
+            if path:
+                return _terminal_invocation(argv, path)
+    for candidate in TERMINAL_CANDIDATES:
         path = shutil.which(candidate)
-        if not path:
-            continue
-        if candidate == "gnome-terminal":
-            return [path, "--", "bash", "-lc"]
-        if candidate in ("mate-terminal",):
-            return [path, "-x", "bash", "-lc"]
-        return [path, "-e", "bash", "-lc"]
+        if path:
+            return [path, *TERMINAL_ARGS.get(candidate, ("-e",)), "bash", "-lc"]
     return None
 
 

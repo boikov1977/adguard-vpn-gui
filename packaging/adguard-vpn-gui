@@ -1,0 +1,14 @@
+#!/usr/bin/python3
+"""System launcher for the AdGuard VPN GUI (installed by the .deb package)."""
+from __future__ import annotations
+
+import sys
+
+LIBDIR = "/usr/lib/adguard-vpn-gui"
+if LIBDIR not in sys.path:
+    sys.path.insert(0, LIBDIR)
+
+from agvpn.app import main  # noqa: E402
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv))
