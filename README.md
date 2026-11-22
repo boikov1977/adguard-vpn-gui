@@ -183,11 +183,14 @@ sudo apt install ./dist/adguard-vpn-gui_1.2.0_all.deb
 ## CI
 
 GitHub Actions (`.github/workflows/ci.yml`) запускается на каждый push и
-pull request: на `ubuntu-24.04` ставит `python3-gi`, `gir1.2-gtk-3.0`,
-`gir1.2-ayatanaappindicator3-0.1`, `desktop-file-utils` и `appstream`, затем
+pull request: на `ubuntu-24.04` ставит `python3-gi`, `python3-cairo`,
+`python3-gi-cairo`, `gir1.2-gtk-3.0`, `gir1.2-ayatanaappindicator3-0.1`,
+`desktop-file-utils`, `appstream`, `gettext` и `rsync`, затем
 
 ```bash
 /usr/bin/python3 -m unittest discover -s tests -v
+LANGUAGE=en /usr/bin/python3 -m unittest discover -s tests
+msgfmt --check -o /tmp/adguard-vpn-gui.mo agvpn/locale/en/LC_MESSAGES/adguard-vpn-gui.po
 /usr/bin/python3 -m compileall -q agvpn adguard-vpn-gui.py
 packaging/build-deb.sh
 dpkg-deb -I dist/adguard-vpn-gui_*_all.deb
@@ -197,12 +200,11 @@ appstreamcli validate --no-net packaging/com.adguardvpn.gui.metainfo.xml
 ```
 
 Пакет в CI только собирается и проверяется — не устанавливается и не
-публикуется. Версия берётся из `APP_VERSION`, поэтому после поднятия до 1.2.0
-CI соберёт `adguard-vpn-gui_1.2.0_all.deb`.
+публикуется. Версия берётся из `APP_VERSION`, поэтому CI собирает
+`adguard-vpn-gui_1.2.0_all.deb`.
 
-Ссылки на скриншоты в AppStream-метаданных и `Homepage` ведут на публичный
-`github.com/boikov1977/adguard-vpn-gui`; в приватной копии репозитория они будут
-отдавать 404, и для публикации нужен публичный репозиторий или другие URL.
+Репозиторий и скриншоты в AppStream-метаданных публичные: ссылки
+`raw.githubusercontent.com/boikov1977/adguard-vpn-gui/main/...` работают.
 
 ## Тесты
 
