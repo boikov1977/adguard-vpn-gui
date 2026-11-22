@@ -49,42 +49,66 @@ Python 3 + GTK3, тёмная тема, трей, графический зап�
 ## Требования
 
 - Linux с GTK3 (проверено на Linux Mint 22.2 Cinnamon).
-- Python 3.10+ и PyGObject (`python3-gi`).
+- Python 3.10+, PyGObject (`python3-gi`) и Cairo (`python3-cairo`, `python3-gi-cairo`).
 - Официальный `adguardvpn-cli` (AdGuard VPN CLI).
 - Для трея: `gir1.2-ayatanaappindicator3-0.1` (без него приложение работает, но без иконки в лотке).
 
 Установка зависимостей (Debian/Ubuntu/Mint):
 
 ```bash
-sudo apt install python3 python3-gi gir1.2-ayatanaappindicator3-0.1
+sudo apt install python3 python3-gi python3-cairo python3-gi-cairo \
+                 gir1.2-ayatanaappindicator3-0.1
 ```
 
 ## Установка
 
+Есть два взаимоисключающих способа. Для обычного использования выбирайте
+**`.deb`**; `install.sh` нужен для разработки и запуска прямо из репозитория.
+
+### Вариант 1 — готовый .deb (рекомендуется)
+
+Скачайте `adguard-vpn-gui_1.2.0_all.deb` со страницы
+[Releases](https://github.com/boikov1977/adguard-vpn-gui/releases) и установите:
+
 ```bash
-cd ~/adguard-gui
+sudo apt install ./adguard-vpn-gui_1.2.0_all.deb
+```
+
+Пакет ставит приложение в `/usr/lib/adguard-vpn-gui`, лаунчер в
+`/usr/bin/adguard-vpn-gui`, пункт меню, иконки и AppStream-метаданные.
+Обновление и удаление — обычными средствами apt:
+
+```bash
+sudo apt update && sudo apt install --only-upgrade adguard-vpn-gui
+sudo apt remove adguard-vpn-gui
+```
+
+### Вариант 2 — из исходников, без root
+
+```bash
+git clone https://github.com/boikov1977/adguard-vpn-gui.git
+cd adguard-vpn-gui
 ./install.sh
 ```
 
-Скрипт создаёт:
-
-- пункт меню **AdGuard VPN**;
-- иконки в `~/.local/share/icons/hicolor/`;
-- ярлык на рабочем столе (`~/Рабочий стол` или `~/Desktop` — по `XDG_DESKTOP_DIR`).
-
-Ярлык на рабочем столе можно не создавать:
+Скрипт создаёт пункт меню, иконки в `~/.local/share/icons/hicolor/` и ярлык
+на рабочем столе (`~/Рабочий стол` или `~/Desktop` — по `XDG_DESKTOP_DIR`).
+Всё устанавливается в домашний каталог, root не нужен. Ярлык на рабочем столе
+можно не создавать:
 
 ```bash
 ./install.sh --no-desktop
 ```
 
 Запуск: меню приложений → **AdGuard VPN** или двойной клик по ярлыку.
-
-Запуск из исходников без установки:
+Запуск из исходников вообще без установки:
 
 ```bash
 python3 adguard-vpn-gui.py
 ```
+
+> Не устанавливайте `.deb` и `install.sh` одновременно: в меню появятся два
+> пункта «AdGuard VPN». Выберите один способ.
 
 ## Первый запуск
 

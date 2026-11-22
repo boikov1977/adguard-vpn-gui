@@ -87,18 +87,18 @@ fi
 PYTHON_BIN="$(command -v python3 || true)"
 if [ -z "$PYTHON_BIN" ]; then
     cat >&2 <<'EOF'
-Не найден python3. Установите Python 3 и PyGObject:
-  sudo apt install python3 python3-gi gir1.2-ayatanaappindicator3-0.1
+Не найден python3. Установите Python 3, PyGObject и Cairo:
+  sudo apt install python3 python3-gi python3-cairo python3-gi-cairo gir1.2-ayatanaappindicator3-0.1
 EOF
     exit 1
 fi
 PYTHON_BIN="$(readlink -f "$PYTHON_BIN" 2>/dev/null || printf '%s' "$PYTHON_BIN")"
 
-if ! "$PYTHON_BIN" -c "import gi" >/dev/null 2>&1; then
+if ! "$PYTHON_BIN" -c "import gi, cairo" >/dev/null 2>&1; then
     cat >&2 <<EOF
-Python ($PYTHON_BIN) не может импортировать PyGObject (модуль gi).
+Python ($PYTHON_BIN) не может импортировать PyGObject (gi) и/или Cairo.
 Установите зависимости:
-  sudo apt install python3-gi gir1.2-ayatanaappindicator3-0.1
+  sudo apt install python3-gi python3-cairo python3-gi-cairo gir1.2-ayatanaappindicator3-0.1
 EOF
     exit 1
 fi

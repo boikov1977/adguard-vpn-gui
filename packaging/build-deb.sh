@@ -132,7 +132,7 @@ Version: $VERSION
 Architecture: all
 Maintainer: boikov1977 <boikov1977@users.noreply.github.com>
 Installed-Size: $INSTALLED_SIZE
-Depends: python3, python3-gi, gir1.2-gtk-3.0, gir1.2-ayatanaappindicator3-0.1, hicolor-icon-theme
+Depends: python3, python3-gi, python3-cairo, python3-gi-cairo, gir1.2-gtk-3.0, gir1.2-ayatanaappindicator3-0.1, hicolor-icon-theme
 Recommends: adwaita-icon-theme, gir1.2-notify-0.7, xdg-utils
 Suggests: adguardvpn-cli
 Section: net
