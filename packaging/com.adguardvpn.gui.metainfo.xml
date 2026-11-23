@@ -73,6 +73,13 @@
   </screenshots>
 
   <releases>
+    <release version="1.2.1" date="2026-11-23">
+      <description>
+        <p xml:lang="ru">Исправлен DNS для сайтов из исключений на системах
+          с systemd-resolved.</p>
+        <p>Fixed DNS for excluded sites on systems using systemd-resolved.</p>
+      </description>
+    </release>
     <release version="1.2.0" date="2026-11-22">
       <description>
         <p xml:lang="ru">Избранные локации и меню в трее, автозапуск VPN,

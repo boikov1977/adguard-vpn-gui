@@ -1,3 +1,12 @@
+adguard-vpn-gui (1.2.1) unstable; urgency=medium
+
+  * Исправлен DNS для сайтов из исключений на системах с systemd-resolved:
+    GUI предупреждает и отключает смену системного DNS одним нажатием.
+  * Fixed DNS for excluded sites on systemd-resolved systems: the GUI warns
+    and turns off the system DNS override with one click.
+
+ -- boikov1977 <boikov1977@users.noreply.github.com>  Mon, 23 Nov 2026 19:40:00 +0300
+
 adguard-vpn-gui (1.2.0) unstable; urgency=medium
 
   * Избранные локации, подменю «Локации» в трее, автозапуск VPN.
