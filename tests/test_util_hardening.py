@@ -205,5 +205,29 @@ class TerminalCommandTests(unittest.TestCase):
         self.assertEqual(argv, ["/usr/bin/xterm", "-e", "bash", "-lc"])
 
 
+class SystemdResolvedStubTests(unittest.TestCase):
+    def _write(self, text: str) -> str:
+        tmp = tempfile.NamedTemporaryFile("w", encoding="utf-8", delete=False)
+        self.addCleanup(os.unlink, tmp.name)
+        tmp.write(text)
+        tmp.close()
+        return tmp.name
+
+    def test_stub_resolv_conf_is_detected(self):
+        path = self._write("nameserver 127.0.0.53\noptions edns0\n")
+        self.assertTrue(util.systemd_resolved_stub(path))
+
+    def test_second_stub_address_is_detected(self):
+        path = self._write("nameserver 127.0.0.54\n")
+        self.assertTrue(util.systemd_resolved_stub(path))
+
+    def test_plain_resolver_is_not_a_stub(self):
+        path = self._write("nameserver 192.168.1.1\n")
+        self.assertFalse(util.systemd_resolved_stub(path))
+
+    def test_missing_file_is_not_a_stub(self):
+        self.assertFalse(util.systemd_resolved_stub("/nonexistent/resolv.conf"))
+
+
 if __name__ == "__main__":
     unittest.main()

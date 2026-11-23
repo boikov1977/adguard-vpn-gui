@@ -30,6 +30,7 @@ from .cli import AdGuardCLI, CliError, License, Location, VpnStatus, needs_recon
 from .i18n import _, ngettext  # noqa: E402
 from .pages import (  # noqa: E402
     AccountPage, DashboardPage, ExclusionsPage, LocationsPage, SettingsPage,
+    exclusion_dns_hint_needed,
 )
 from .state import LocationsCache, StateStore, location_key  # noqa: E402
 from .widgets import (  # noqa: E402
@@ -2120,6 +2121,7 @@ class MainWindow(Gtk.ApplicationWindow):
                 tray_available=self.tray_available,
             )
             self.dashboard.refresh()
+            self._update_exclusion_dns_hint()
             if callback:
                 callback()
 
@@ -2233,6 +2235,14 @@ class MainWindow(Gtk.ApplicationWindow):
                 tray_available=self.tray_available,
             )
             self.dashboard.refresh()
+            self._update_exclusion_dns_hint()
+            if key == "change_system_dns" and not value:
+                self.toast(
+                    _("Смена системного DNS отключена"),
+                    _("Сайты из исключений должны открываться: их DNS-запросы "
+                      "идут напрямую."),
+                    error=False,
+                )
 
         def failed(err: Exception) -> None:
             self.clear_busy()
@@ -2908,6 +2918,14 @@ class MainWindow(Gtk.ApplicationWindow):
             self._nav_badge.set_visible(True)
         else:
             self._nav_badge.set_visible(False)
+        self._update_exclusion_dns_hint()
+
+    def _update_exclusion_dns_hint(self) -> None:
+        self.exclusions_page.set_dns_hint(exclusion_dns_hint_needed(
+            self.config.values.get("system_dns") if self.config else None,
+            self.exclusions,
+            util.systemd_resolved_stub(),
+        ))
 
     # ------------------------------------------------------------------
     # Account / maintenance

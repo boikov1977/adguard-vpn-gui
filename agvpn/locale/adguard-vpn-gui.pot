@@ -2109,3 +2109,34 @@ msgstr ""
 #: agvpn/app.py: autostart
 msgid "Графический интерфейс для AdGuard VPN CLI"
 msgstr ""
+
+#: agvpn/pages.py: exclusions DNS hint
+msgid "DNS для исключений не работает"
+msgstr ""
+
+#: agvpn/pages.py: exclusions DNS hint
+msgid ""
+"CLI не может определить системный DNS: systemd-resolved скрывает его за "
+"127.0.0.53. Поэтому сайты из исключений не открываются. Отключите «Менять "
+"системный DNS» — DNS-запросы пойдут напрямую, как и трафик этих сайтов."
+msgstr ""
+
+#: agvpn/pages.py: exclusions DNS hint
+msgid "Отключить смену системного DNS"
+msgstr ""
+
+#: agvpn/app.py: apply_setting
+msgid "Смена системного DNS отключена"
+msgstr ""
+
+#: agvpn/app.py: apply_setting
+msgid "Сайты из исключений должны открываться: их DNS-запросы идут напрямую."
+msgstr ""
+
+#: agvpn/pages.py: exclusions DNS hint (selective)
+msgid ""
+"CLI не может определить системный DNS: systemd-resolved скрывает его за "
+"127.0.0.53. Поэтому сайты, которых нет в списке исключений, не открываются. "
+"Отключите «Менять системный DNS» — их DNS-запросы пойдут напрямую, как и их "
+"трафик."
+msgstr ""

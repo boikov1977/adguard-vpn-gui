@@ -15,7 +15,10 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
 from agvpn import pages  # noqa: E402
-from agvpn.pages import ExclusionsPage, exclusion_control_state, flow_columns  # noqa: E402
+from agvpn.pages import (  # noqa: E402
+    ExclusionsPage, exclusion_control_state, exclusion_dns_hint_needed,
+    flow_columns,
+)
 
 
 class FlowColumnsTests(unittest.TestCase):
@@ -62,6 +65,21 @@ class ExclusionControlStateTests(unittest.TestCase):
         idle_state = exclusion_control_state(["example.com"], False)
         self.assertFalse(busy_state["rows"])
         self.assertTrue(idle_state["rows"])
+
+
+class ExclusionDnsHintTests(unittest.TestCase):
+    def test_hint_needs_system_dns_change_exclusions_and_stub(self):
+        self.assertTrue(exclusion_dns_hint_needed(True, ["ozon.ru"], True))
+
+    def test_no_hint_without_exclusions(self):
+        self.assertFalse(exclusion_dns_hint_needed(True, [], True))
+
+    def test_no_hint_when_system_dns_is_left_alone(self):
+        # Change system DNS off is the fix itself: the real resolver stays.
+        self.assertFalse(exclusion_dns_hint_needed(False, ["ozon.ru"], True))
+
+    def test_no_hint_on_plain_resolv_conf(self):
+        self.assertFalse(exclusion_dns_hint_needed(True, ["ozon.ru"], False))
 
 
 class _StubStyle:

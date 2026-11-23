@@ -35,6 +35,17 @@ def exclusion_control_state(items: list[str], busy: bool) -> dict[str, bool]:
     }
 
 
+def exclusion_dns_hint_needed(system_dns: bool | None, items: list[str],
+                              stub: bool) -> bool:
+    """Excluded sites cannot resolve when the CLI loses the system DNS.
+
+    The CLI skips the systemd-resolved stub, and with "Change system DNS" on it
+    also replaces the only usable resolver; excluded (bypass) traffic is then
+    left without DNS.  Turning that option off keeps the system resolver.
+    """
+    return bool(system_dns) and bool(items) and stub
+
+
 def flow_columns(width: int, min_wide_width: int = 820) -> int:
     """Column count for responsive card rows at the given content width."""
     if width <= 0:
@@ -681,6 +692,26 @@ class ExclusionsPage(Page):
         mode_card.pack_start(self.mode_desc, False, False, 0)
         self.body.pack_start(mode_card, False, False, 0)
 
+        dns_card = card(spacing=8, kind="banner")
+        dns_head = hbox(8)
+        dns_head.pack_start(icon("dialog-warning-symbolic", 18), False, False, 0)
+        dns_head.pack_start(label(_("DNS для исключений не работает"), "title-strong"),
+                            False, False, 0)
+        dns_card.pack_start(dns_head, False, False, 0)
+        self.dns_text = label("", "small muted", wrap=True, max_width=78)
+        dns_card.pack_start(self.dns_text, False, False, 0)
+        dns_fix = Gtk.Button(label=_("Отключить смену системного DNS"))
+        dns_fix.get_style_context().add_class("primary")
+        dns_fix.connect(
+            "clicked",
+            lambda *_: self.win.apply_setting("change_system_dns", False),
+        )
+        dns_card.pack_start(dns_fix, False, False, 0)
+        dns_card.set_no_show_all(True)
+        dns_card.set_visible(False)
+        self.body.pack_start(dns_card, False, False, 0)
+        self.dns_card = dns_card
+
         add_card = card(spacing=10)
         add_card.pack_start(label(_("Добавить сайт"), "title-strong"), False, False, 0)
         self.add_row = hbox(8)
@@ -793,6 +824,21 @@ class ExclusionsPage(Page):
             self.mode_desc.set_text(
                 _("Общий: VPN защищает весь трафик, кроме сайтов из списка исключений.")
             )
+        if hasattr(self, "dns_text"):
+            if self._mode == "selective":
+                self.dns_text.set_text(_(
+                    "CLI не может определить системный DNS: systemd-resolved скрывает "
+                    "его за 127.0.0.53. Поэтому сайты, которых нет в списке исключений, "
+                    "не открываются. Отключите «Менять системный DNS» — их "
+                    "DNS-запросы пойдут напрямую, как и их трафик."
+                ))
+            else:
+                self.dns_text.set_text(_(
+                    "CLI не может определить системный DNS: systemd-resolved скрывает "
+                    "его за 127.0.0.53. Поэтому сайты из исключений не открываются. "
+                    "Отключите «Менять системный DNS» — DNS-запросы пойдут напрямую, "
+                    "как и трафик этих сайтов."
+                ))
         if hasattr(self, "blocklist_hint"):
             self.blocklist_hint.set_visible(
                 bool(self._blocklist) and self._mode != "general"
@@ -805,6 +851,15 @@ class ExclusionsPage(Page):
         self._update_mode_text()
         self._items = list(items)
         self._render()
+
+    def set_dns_hint(self, visible: bool) -> None:
+        visible = bool(visible)
+        # Children of a no-show-all card stay hidden after the initial
+        # show_all(), so reveal the whole card when it is needed.
+        self.dns_card.set_no_show_all(not visible)
+        if visible:
+            self.dns_card.show_all()
+        self.dns_card.set_visible(visible)
 
     # -- UnRKN blocklist -----------------------------------------------------
     def set_blocklist(self, data) -> None:

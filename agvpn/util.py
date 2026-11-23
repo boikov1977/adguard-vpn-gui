@@ -195,6 +195,20 @@ def bool_word(value: bool) -> str:
     return "on" if value else "off"
 
 
+def systemd_resolved_stub(path: str | Path = "/etc/resolv.conf") -> bool:
+    """True when resolv.conf points at the systemd-resolved stub resolver.
+
+    The CLI reads /etc/resolv.conf to learn the system DNS servers.  The stub
+    (127.0.0.53/54) is skipped as a potential route loop, which leaves the CLI
+    without an upstream for excluded sites; those sites then fail to resolve.
+    """
+    try:
+        text = Path(path).read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        return False
+    return bool(re.search(r"^\s*nameserver\s+127\.0\.0\.(?:53|54)\s*$", text, re.M))
+
+
 def relative_time(ts: float | int | None) -> str:
     if not ts:
         return ""
