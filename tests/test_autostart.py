@@ -76,6 +76,30 @@ class WriteAutostartTests(unittest.TestCase):
             self.assertEqual(autostart_try_exec(Path("/nonexistent/script")),
                              sys.executable)
 
+    def test_try_exec_prefers_the_installed_launcher(self):
+        # A DEB install must gate the entry on the packaged launcher, not on
+        # whichever copy of the app happens to have written the file.
+        script = Path("/srv/sources/adguard-vpn-gui.py")
+
+        def is_file(path) -> bool:
+            return str(path) == "/usr/bin/adguard-vpn-gui"
+
+        with mock.patch.object(Path, "is_file", is_file), \
+                mock.patch("agvpn.app.os.access", return_value=True):
+            self.assertEqual(autostart_try_exec(script), "/usr/bin/adguard-vpn-gui")
+
+    def test_try_exec_uses_an_executable_source_script(self):
+        # Running from sources without the launcher: the script itself keeps
+        # the entry enabled because Exec launches it through the interpreter.
+        script = Path("/srv/sources/adguard-vpn-gui.py")
+
+        def is_file(path) -> bool:
+            return str(path) == str(script)
+
+        with mock.patch.object(Path, "is_file", is_file), \
+                mock.patch("agvpn.app.os.access", return_value=True):
+            self.assertEqual(autostart_try_exec(script), str(script))
+
 
 if __name__ == "__main__":
     unittest.main()
