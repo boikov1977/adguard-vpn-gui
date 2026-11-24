@@ -224,7 +224,8 @@ class EndpointCache:
     ``MAX_SCAN_BYTES``) happens only on the first call, after truncation or
     rotation, and when the read offset is no longer trustworthy.  If new data
     contains no ``Using endpoint`` line, the previously cached endpoint is
-    kept — except after :meth:`invalidate`, which drops it.
+    kept — except after :meth:`invalidate`, which hides it until the next
+    record is parsed.
     """
 
     def __init__(self, path: str | Path | None = None) -> None:
@@ -243,14 +244,17 @@ class EndpointCache:
         return self._path if self._path is not None else default_log_path()
 
     def invalidate(self) -> None:
-        """Drop the cached endpoint until a fresh record is parsed.
+        """Hide the cached endpoint until a later record is parsed.
 
-        Called when the tunnel connects to another location.  Returning the
-        previous tunnel's endpoint would attribute its ping to the new
-        location, so ``get()`` answers ``None`` until a new ``Using endpoint``
-        line appears.  The read offset is deliberately kept: the fresh record
-        is in the appended bytes, so the next call can still be cheap.
+        Called when the tunnel connects to another location: keeping the old
+        value would attribute the previous tunnel's ping to the new location,
+        so ``get()`` answers ``None`` instead of the cached endpoint.  The read
+        offset is deliberately kept: the fresh record is in the appended
+        bytes, so the next call can still be cheap.
         """
+        # shortcut: a record appended before invalidate() but not read yet is
+        # still accepted as fresh, so this is not a full generation boundary;
+        # add an operation-start offset if that window ever matters.
         with self._lock:
             self._value = None
             self._force_rescan = False
