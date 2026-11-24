@@ -258,6 +258,8 @@ class ExclusionValidationTests(unittest.TestCase):
     def test_malformed_values_are_rejected(self):
         for value in ("999.1.1.1/8", "10.0.0.0/33", "10.0.0.0/",
                       "::/zzz", "2001:db8::/129", "10.0.0.0/8/8",
+                      "192.168.1.0/255.255.255.0", "192.168.1.0/0.0.0.255",
+                      "fe80::1%eth0", "2001:db8::1%eth0/64",
                       "--help", "a..b", ""):
             with self.subTest(value=value):
                 self.assertFalse(pages.is_valid_exclusion(value), value)

@@ -35,7 +35,12 @@ def is_valid_exclusion(value: str) -> bool:
     ``site-exclusions add --help`` documents IPv4/IPv6 addresses (optionally
     with a port) and CIDR ranges; ``ipaddress`` validates those precisely,
     which a regex cannot do for IPv6.
+
+    Dotted netmasks and IPv6 scope IDs parse in ``ipaddress`` but the CLI
+    rejects them (or, for the IPv4 hostmask forms, aborts), so screen them out.
     """
+    if "%" in value or ("/" in value and not value.rsplit("/", 1)[1].isdigit()):
+        return False
     try:
         ipaddress.ip_network(value, strict=False)
     except ValueError:
