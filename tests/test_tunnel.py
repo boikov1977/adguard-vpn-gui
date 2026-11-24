@@ -406,6 +406,20 @@ class EndpointCacheIncrementalTests(unittest.TestCase):
             self.assertIsNotNone(endpoint)
             self.assertEqual(endpoint.name, "new.example")
 
+    def test_read_new_returns_empty_when_the_file_disappears(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "tunnel.log"
+            path.write_text(endpoint_line("old.example", 11), encoding="utf-8")
+            cache = tunnel.EndpointCache(path)
+            self.assertEqual(cache.get().name, "old.example")
+
+            # The log is rotated/removed between stat() and read().
+            with mock.patch("builtins.open", side_effect=OSError("gone")):
+                self.assertEqual(cache._read_new(path, 0, 10), b"")
+
+            path.unlink()
+            self.assertIsNone(cache.get())
+
     def test_invalidate_drops_stale_value_until_new_record(self):
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp) / "tunnel.log"

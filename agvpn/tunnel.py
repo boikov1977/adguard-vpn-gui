@@ -315,9 +315,14 @@ class EndpointCache:
         return size - (len(data) - index - 1)
 
     def _read_new(self, target: Path, offset: int, size: int) -> bytes:
-        with open(target, "rb") as handle:
-            handle.seek(offset)
-            return handle.read(max(0, size - offset))
+        try:
+            with open(target, "rb") as handle:
+                handle.seek(offset)
+                return handle.read(max(0, size - offset))
+        except (OSError, ValueError):
+            # The log can be rotated or removed between stat() and read(); the
+            # caller treats an empty chunk as "retry on the next poll".
+            return b""
 
     def _full_scan(self, target: Path, size: int,
                    inode: tuple[int, int], mtime_ns: int) -> Endpoint | None:
