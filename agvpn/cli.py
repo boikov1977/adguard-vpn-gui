@@ -29,7 +29,9 @@ BINARY_CANDIDATES = (
     "/usr/bin/adguardvpn-cli",
 )
 
-ANSI_RE = re.compile(r"\x1b\[[0-9;?]*[A-Za-z]|\x1b\][^\x07]*(?:\x07|\x1b\\)")
+# Keep a single ANSI implementation; ``cli.strip_ansi`` remains as an alias
+# for callers that imported it from this module.
+strip_ansi = util.strip_ansi
 
 
 # ---------------------------------------------------------------------------
@@ -162,10 +164,6 @@ class AppConfig:
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
-def strip_ansi(text: str) -> str:
-    return ANSI_RE.sub("", text or "").replace("\r\n", "\n").replace("\r", "\n")
-
-
 def _clip_argv_part(text: str, limit: int) -> str:
     if len(text) <= limit:
         return text

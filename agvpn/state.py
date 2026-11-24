@@ -2,13 +2,11 @@
 from __future__ import annotations
 
 import json
-import os
+import math
 import re
-import tempfile
 import threading
 import time
 from dataclasses import dataclass, field
-from pathlib import Path
 from typing import Any
 
 from . import util
@@ -53,6 +51,19 @@ _ISO_RE = re.compile(r"^[A-Z]{2,3}$")
 def _clean_text(value: Any) -> str:
     """Collapse whitespace in a user/CLI supplied string."""
     return " ".join(str(value).split())
+
+
+def _timestamp(value: Any) -> float | None:
+    """Return a sane Unix timestamp, or ``None`` for a corrupt value."""
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return None
+    try:
+        number = float(value)
+    except (TypeError, ValueError, OverflowError):
+        return None
+    if not math.isfinite(number) or number <= 0:
+        return None
+    return number
 
 
 def location_key(iso: Any, city: Any) -> str | None:
@@ -142,26 +153,6 @@ def _normalise_window(raw: Any) -> dict[str, Any]:
     }
 
 
-def _atomic_write(path: Path, data: str) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    fh = tempfile.NamedTemporaryFile(
-        "w", encoding="utf-8", dir=str(path.parent), prefix=path.name + ".", delete=False
-    )
-    try:
-        fh.write(data)
-        fh.flush()
-        os.fsync(fh.fileno())
-        os.chmod(fh.name, 0o600)
-        fh.close()
-        os.replace(fh.name, path)
-    finally:
-        try:
-            if not fh.closed:
-                fh.close()
-        except Exception:
-            pass
-
-
 class StateStore:
     def __init__(self) -> None:
         self.path = util.CONFIG_DIR / "state.json"
@@ -191,6 +182,7 @@ class StateStore:
             prefs.setdefault(key, value)
         data["favorites"] = _sanitise_keys(data.get("favorites"), MAX_FAVORITES)
         data["recent"] = _sanitise_keys(data.get("recent"), MAX_RECENT)
+        data["connected_since"] = _timestamp(data.get("connected_since"))
         return data
 
     @property
@@ -200,7 +192,10 @@ class StateStore:
     def save(self) -> None:
         with self._lock:
             try:
-                _atomic_write(self.path, json.dumps(self._data, ensure_ascii=False, indent=2))
+                util.atomic_write_text(
+                    self.path,
+                    json.dumps(self._data, ensure_ascii=False, indent=2),
+                )
             except Exception:
                 util.get_logger("state").warning("Could not save state file", exc_info=True)
 
@@ -225,8 +220,7 @@ class StateStore:
 
     @property
     def connected_since(self) -> float | None:
-        value = self._data.get("connected_since")
-        return float(value) if value else None
+        return _timestamp(self._data.get("connected_since"))
 
     def set_connected_since(self, ts: float | None) -> None:
         self._data["connected_since"] = ts
@@ -366,7 +360,7 @@ class LocationsCache:
     def save(self, items: list[dict]) -> None:
         self._cache = LocationCache(items=items, ts=time.time())
         try:
-            _atomic_write(self.path, json.dumps(
+            util.atomic_write_text(self.path, json.dumps(
                 {"ts": self._cache.ts, "items": items}, ensure_ascii=False
             ))
         except Exception:

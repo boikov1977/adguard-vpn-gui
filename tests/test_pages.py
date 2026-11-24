@@ -218,5 +218,23 @@ class ExclusionRenderTests(unittest.TestCase):
         self.assertFalse(page.add_btn.sensitive)
 
 
+class DomainRegexTests(unittest.TestCase):
+    def test_cli_options_are_not_treated_as_domains(self):
+        # These used to match the single-label fallback and were passed to
+        # adguardvpn-cli as options instead of sites.
+        for value in ("--help", "-l", "--for-mode", "-x", "-", "--"):
+            with self.subTest(value=value):
+                self.assertFalse(pages.DOMAIN_RE.match(value))
+
+    def test_hostnames_are_still_accepted(self):
+        for value in (
+            "example.com", "*.example.com", "sub.example.co.uk",
+            "192.168.1.1", "192.168.1.1:8080", "localhost", "my-router",
+            "*.local", "xn--80ak6aa92e.com",
+        ):
+            with self.subTest(value=value):
+                self.assertTrue(pages.DOMAIN_RE.match(value), value)
+
+
 if __name__ == "__main__":
     unittest.main()

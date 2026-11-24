@@ -193,5 +193,20 @@ class OrderLocationsTests(unittest.TestCase):
         self.assertEqual(ordered, [self.helsinki, synthetic])
 
 
+class ConnectedSinceTests(_StoreMixin, unittest.TestCase):
+    def test_valid_timestamp_is_loaded(self):
+        store = self._store({"connected_since": 1700000000})
+        self.assertEqual(store.connected_since, 1700000000.0)
+
+    def test_corrupt_timestamp_is_ignored(self):
+        # A broken state.json must not raise inside the one-second session
+        # timer, which would silently stop the connection clock.
+        for value in ("123", {"ts": 1}, [1], True, None, -5, 0):
+            with self.subTest(value=value):
+                store = self._store({"connected_since": value})
+                self.assertIsNone(store.connected_since)
+                self.assertIsNone(store.data["connected_since"])
+
+
 if __name__ == "__main__":
     unittest.main()

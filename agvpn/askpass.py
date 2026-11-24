@@ -11,6 +11,7 @@ import os
 import resource
 import signal
 import sys
+import tempfile
 import time
 
 try:
@@ -35,9 +36,21 @@ except Exception:  # keep the password dialog usable even without the package
 
 ASSETS = os.path.join(HERE, "assets")
 STYLE = os.path.join(HERE, "style.css")
-RETRY_FILE = os.path.join(
-    os.environ.get("XDG_RUNTIME_DIR") or "/tmp", "agvpn-gui-askpass-attempt"
-)
+
+
+def _retry_file_path() -> str:
+    """Per-user retry marker, safe even in the shared ``/tmp`` fallback."""
+    directory = os.environ.get("XDG_RUNTIME_DIR") or tempfile.gettempdir()
+    uid = str(os.getuid())
+    for key in ("SUDO_UID", "PKEXEC_UID"):
+        value = os.environ.get(key, "")
+        if value.isdigit():
+            uid = value
+            break
+    return os.path.join(directory, f"agvpn-gui-askpass-attempt-{uid}")
+
+
+RETRY_FILE = _retry_file_path()
 
 CSS = b"""
 window.askpass-window {

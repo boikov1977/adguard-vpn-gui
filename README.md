@@ -178,7 +178,7 @@ DNS», у исключённых сайтов не остаётся DNS-серв
 ## Удаление
 
 ```bash
-cd ~/adguard-gui
+cd ~/adguard-vpn-gui
 ./uninstall.sh
 ```
 

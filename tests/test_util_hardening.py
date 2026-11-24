@@ -229,5 +229,30 @@ class SystemdResolvedStubTests(unittest.TestCase):
         self.assertFalse(util.systemd_resolved_stub("/nonexistent/resolv.conf"))
 
 
+class AtomicWriteTests(unittest.TestCase):
+    def setUp(self) -> None:
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        self.directory = Path(tmp.name)
+
+    def test_writes_private_file(self):
+        target = self.directory / "state.json"
+
+        util.atomic_write_text(target, "data")
+
+        self.assertEqual(target.read_text(encoding="utf-8"), "data")
+        self.assertEqual(stat.S_IMODE(target.stat().st_mode), 0o600)
+
+    def test_failure_leaves_no_temporary_file(self):
+        target = self.directory / "state.json"
+
+        with mock.patch.object(util.os, "replace", side_effect=OSError("boom")):
+            with self.assertRaises(OSError):
+                util.atomic_write_text(target, "data")
+
+        self.assertFalse(target.exists())
+        self.assertEqual(list(self.directory.iterdir()), [])
+
+
 if __name__ == "__main__":
     unittest.main()
