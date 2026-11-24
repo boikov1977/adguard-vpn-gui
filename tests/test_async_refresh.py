@@ -52,6 +52,7 @@ class _FakeWindow:
         self.license_error = False
         self._exclusions_loaded = True
         self._excl_op = False
+        self._excl_seq = 0
         self._config_inflight = False
         self._config_seq = 0
         self._config_refresh_pending = None

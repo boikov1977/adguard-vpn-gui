@@ -30,6 +30,7 @@ class _FakeWindow:
     def __init__(self) -> None:
         self._excl_op = False
         self._excl_inflight = False
+        self._excl_seq = 0
         self._exclusions_loaded = False
         self.exclusions = []
         self.exclusion_mode = "general"
@@ -197,6 +198,63 @@ class ExclusionGateTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class _QueuedWindow(_FakeWindow):
+    """A window whose async answers are delivered later by the test."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self._callbacks: list[tuple] = []
+
+    def run_async(self, func, on_success=None, on_error=None) -> None:
+        self._callbacks.append((on_success, on_error))
+
+    def deliver(self, index: int = 0, payload=None) -> None:
+        on_success, _on_error = self._callbacks.pop(index)
+        on_success(mock.Mock() if payload is None else payload)
+
+
+class LateExclusionsAnswerTests(unittest.TestCase):
+    def test_late_load_does_not_restore_the_previous_account(self):
+        window = _QueuedWindow()
+        window.load_exclusions()      # the read of the logged-in account
+        self.assertTrue(window._excl_inflight)
+
+        window.refresh_license = mock.Mock()
+        window.refresh_status = mock.Mock()
+        window.locations_page = mock.Mock()
+        window.confirm = mock.Mock(return_value=True)
+        window.confirm_logout = types.MethodType(MainWindow.confirm_logout, window)
+        window.confirm_logout()       # queues the logout
+        window.deliver(1)             # logout finished: the list was reset
+        self.assertFalse(window._exclusions_loaded)
+        self.assertFalse(window._excl_inflight)
+
+        window.deliver(0, ("general", ["old.example"]))  # answer of the old account
+        self.assertFalse(window._exclusions_loaded)
+        self.assertFalse(window._excl_inflight)
+        window.exclusions_page.set_data.assert_not_called()
+        self.assertEqual(window.exclusions, [])
+
+    def test_late_load_does_not_restore_an_expired_session(self):
+        window = _QueuedWindow()
+        window.load_exclusions()
+        window._license_seq = 1
+        window._license_inflight = True
+        window.account_page = mock.Mock()
+        window._update_account_chip = mock.Mock()
+        window._run_pending_license = mock.Mock()
+        window._license_done = types.MethodType(MainWindow._license_done, window)
+
+        window._license_done(License(logged_in=False), False, 1)
+        self.assertFalse(window._exclusions_loaded)
+        self.assertFalse(window._excl_inflight)
+
+        window.deliver(0, ("general", ["old.example"]))
+        self.assertFalse(window._exclusions_loaded)
+        window.exclusions_page.set_data.assert_not_called()
+        self.assertEqual(window.exclusions, [])
 
 
 class ExclusionReloadTests(unittest.TestCase):

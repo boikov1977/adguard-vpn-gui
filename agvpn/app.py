@@ -407,6 +407,7 @@ class MainWindow(Gtk.ApplicationWindow):
         self._config_refresh_pending = None
         self._locations_inflight = False
         self._excl_inflight = False
+        self._excl_seq = 0
         self._excl_op = False
         self._poll_timer = None
         self._status_monitor = None
@@ -2198,6 +2199,10 @@ class MainWindow(Gtk.ApplicationWindow):
             if not license_obj.logged_in:
                 self._exclusions_loaded = False
                 self.exclusions_page.reset()
+                # A read already in flight belongs to the previous account:
+                # bump the generation so its answer is dropped.
+                self._excl_seq += 1
+                self._excl_inflight = False
                 self._update_exclusion_badge()
             self._maybe_autoconnect()
         self._run_pending_license()
@@ -2812,6 +2817,8 @@ class MainWindow(Gtk.ApplicationWindow):
         if self._exclusions_loaded and not force:
             return
         self._excl_inflight = True
+        self._excl_seq += 1
+        seq = self._excl_seq
         self.exclusions_page.set_busy(True)
 
         def job():
@@ -2820,6 +2827,10 @@ class MainWindow(Gtk.ApplicationWindow):
             return mode, items
 
         def done(payload) -> None:
+            if seq != self._excl_seq:
+                # Logout or an expired session reset the list: the answer is
+                # about the previous account and must not be shown.
+                return
             mode, items = payload
             self._excl_inflight = False
             self.exclusion_mode = mode
@@ -2830,6 +2841,8 @@ class MainWindow(Gtk.ApplicationWindow):
             self._update_exclusion_badge()
 
         def failed(err: Exception) -> None:
+            if seq != self._excl_seq:
+                return
             self._excl_inflight = False
             self.exclusions_page.set_busy(False)
             log.warning("Exclusions load failed: %s", err)
@@ -3157,6 +3170,10 @@ class MainWindow(Gtk.ApplicationWindow):
             self.locations_page.set_locations([])
             self._exclusions_loaded = False
             self.exclusions_page.reset()
+            # A read already in flight belongs to the previous account: bump
+            # the generation so its answer is dropped.
+            self._excl_seq += 1
+            self._excl_inflight = False
             self._update_exclusion_badge()
 
         def failed(err: Exception) -> None:
