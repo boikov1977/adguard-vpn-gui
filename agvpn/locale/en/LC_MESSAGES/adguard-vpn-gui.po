@@ -2,7 +2,7 @@
 # Russian is the source language; this catalog provides the English UI.
 msgid ""
 msgstr ""
-"Project-Id-Version: AdGuard VPN GUI 1.2.1\n"
+"Project-Id-Version: AdGuard VPN GUI 1.2.2\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-11-22 11:08+1000\n"
 "PO-Revision-Date: 2026-11-22 12:00+1000\n"

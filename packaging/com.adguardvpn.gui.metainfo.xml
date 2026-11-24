@@ -73,6 +73,15 @@
   </screenshots>
 
   <releases>
+    <release version="1.2.2" date="2026-11-24">
+      <description>
+        <p xml:lang="ru">Ужесточена проверка доменов в исключениях, исправлено
+          экранирование путей в автозапуске и повышена устойчивость состояния
+          подключения к повреждённому state.json.</p>
+        <p>Hardened exclusion domain validation, fixed autostart path quoting
+          and made the connection state resilient to a corrupt state.json.</p>
+      </description>
+    </release>
     <release version="1.2.1" date="2026-11-23">
       <description>
         <p xml:lang="ru">Исправлен DNS для сайтов из исключений на системах
