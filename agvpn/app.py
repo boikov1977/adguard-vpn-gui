@@ -376,8 +376,14 @@ class MainWindow(Gtk.ApplicationWindow):
         self._status_failures = 0
         self._next_poll = 0.0
         self._status_event_pending = False
+        self._status_refresh_pending = False
+        self._status_seq = 0
         self._license_inflight = False
+        self._license_seq = 0
+        self._license_refresh_pending = False
         self._config_inflight = False
+        self._config_seq = 0
+        self._config_refresh_pending = None
         self._locations_inflight = False
         self._excl_inflight = False
         self._excl_op = False
@@ -1350,44 +1356,73 @@ class MainWindow(Gtk.ApplicationWindow):
             self._cli_missing()
             return
         if self._status_inflight:
+            # A newer truth is coming: drop the answer still in flight and
+            # refresh again once that call ends.
+            self._status_seq += 1
+            self._status_refresh_pending = True
             return
         self._status_inflight = True
+        self._status_seq += 1
+        seq = self._status_seq
         self.run_async(
             self.cli.status,
-            lambda status: self._status_done(status, initial),
-            lambda err: self._status_error(err, initial),
+            lambda status: self._status_done(status, initial, seq),
+            lambda err: self._status_error(err, initial, seq),
         )
 
-    def _status_done(self, status: VpnStatus, initial: bool) -> None:
+    def _status_done(self, status: VpnStatus, initial: bool, seq: int) -> None:
+        stale = seq != self._status_seq
         self._status_inflight = False
-        self._status_failures = 0
-        self._next_poll = 0.0
-        self.apply_status(status)
-        self._schedule_status_poll()
-        self._schedule_pending_status_event()
-
-    def _status_error(self, err: Exception, initial: bool) -> None:
-        self._status_inflight = False
-        self._status_failures += 1
-        delay = min(30, 3.5 * (2 ** min(self._status_failures, 3)))
-        self._next_poll = time.time() + delay
-        log.warning("Status poll failed (%s): %s", self._status_failures, err)
-        if isinstance(err, CliError) and err.kind == "missing":
-            self._cli_missing()
+        if not stale:
+            self._status_failures = 0
+            self._next_poll = 0.0
+            self.apply_status(status)
             self._schedule_status_poll()
+            self._schedule_pending_status_event()
+        self._run_pending_status()
+
+    def _status_error(self, err: Exception, initial: bool, seq: int) -> None:
+        stale = seq != self._status_seq
+        self._status_inflight = False
+        if not stale:
+            self._status_failures += 1
+            delay = min(30, 3.5 * (2 ** min(self._status_failures, 3)))
+            self._next_poll = time.time() + delay
+            log.warning("Status poll failed (%s): %s", self._status_failures, err)
+            if isinstance(err, CliError) and err.kind == "missing":
+                self._cli_missing()
+                self._schedule_status_poll()
+            else:
+                if not self.status_loaded:
+                    self.status = VpnStatus(state="unknown", raw=str(err))
+                self._refresh_static_ui()
+                if self._status_failures == 3 and not initial:
+                    self.toast(
+                        _("CLI не отвечает"),
+                        _("Не удалось получить статус. Проверьте установку adguardvpn-cli."),
+                        error=True,
+                    )
+                self._schedule_status_poll()
+        self._run_pending_status()
+
+    def _run_pending_status(self) -> None:
+        """Fulfil a refresh dropped while a status call was in flight."""
+        if not self._status_refresh_pending:
             return
-        if not self.status_loaded:
-            self.status = VpnStatus(state="unknown", raw=str(err))
-        self._refresh_static_ui()
-        if self._status_failures == 3 and not initial:
-            self.toast(
-                _("CLI не отвечает"),
-                _("Не удалось получить статус. Проверьте установку adguardvpn-cli."),
-                error=True,
-            )
-        self._schedule_status_poll()
+        self._status_refresh_pending = False
+        if not self._alive or self._shutting_down:
+            return
+        if self.busy_kind in ("connect", "disconnect"):
+            # The operation refreshes the status when it finishes.
+            return
+        if time.time() < self._next_poll:
+            # A backoff is active; the scheduled poll will pick it up.
+            return
+        self.refresh_status()
 
     def apply_status(self, status: VpnStatus) -> None:
+        # A direct apply is newer than any refresh still in flight.
+        self._status_seq += 1
         if self.busy_kind in ("connect", "disconnect"):
             return
         previous = self.status
@@ -2080,12 +2115,26 @@ class MainWindow(Gtk.ApplicationWindow):
     # Data loads
     # ------------------------------------------------------------------
     def refresh_license(self, initial: bool = False) -> None:
-        if not self.cli.available or self._license_inflight:
+        if not self.cli.available:
+            return
+        if self._license_inflight:
+            # Newer answer requested: drop the one in flight and repeat after.
+            self._license_seq += 1
+            self._license_refresh_pending = True
             return
         self._license_inflight = True
+        self._license_seq += 1
+        seq = self._license_seq
+        self.run_async(
+            self.cli.license,
+            lambda license_obj: self._license_done(license_obj, initial, seq),
+            lambda err: self._license_error(err, initial, seq),
+        )
 
-        def done(license_obj: License) -> None:
-            self._license_inflight = False
+    def _license_done(self, license_obj: License, initial: bool, seq: int) -> None:
+        stale = seq != self._license_seq
+        self._license_inflight = False
+        if not stale:
             self.license = license_obj
             self.license_loaded = True
             self.license_error = False
@@ -2094,25 +2143,51 @@ class MainWindow(Gtk.ApplicationWindow):
             if not license_obj.logged_in:
                 self._exclusions_loaded = False
                 self._update_exclusion_badge()
+        self._run_pending_license()
 
-        def failed(err: Exception) -> None:
-            self._license_inflight = False
+    def _license_error(self, err: Exception, initial: bool, seq: int) -> None:
+        stale = seq != self._license_seq
+        self._license_inflight = False
+        if not stale:
             self.license_error = True
             log.warning("License request failed: %s", err)
             self.account_page.refresh()
             self._update_account_chip()
             if not initial:
                 self.toast(_("Лицензия недоступна"), _("Не удалось получить данные аккаунта."), error=True)
+        self._run_pending_license()
 
-        self.run_async(self.cli.license, done, failed)
+    def _run_pending_license(self) -> None:
+        """Fulfil a license refresh dropped while a request was in flight."""
+        if not self._license_refresh_pending:
+            return
+        self._license_refresh_pending = False
+        if not self._alive or self._shutting_down:
+            return
+        self.refresh_license()
 
     def refresh_config(self, silent: bool = True, callback=None) -> None:
-        if not self.cli.available or self._config_inflight:
+        if not self.cli.available:
+            return
+        if self._config_inflight:
+            # Newer answer requested: drop the one in flight and repeat after.
+            # Last request wins: keep its arguments for the repeat.
+            self._config_seq += 1
+            self._config_refresh_pending = (silent, callback)
             return
         self._config_inflight = True
+        self._config_seq += 1
+        seq = self._config_seq
+        self.run_async(
+            self.cli.config_show,
+            lambda cfg: self._config_done(cfg, silent, callback, seq),
+            lambda err: self._config_error(err, silent, seq),
+        )
 
-        def done(cfg: cli.AppConfig) -> None:
-            self._config_inflight = False
+    def _config_done(self, cfg: cli.AppConfig, silent: bool, callback, seq: int) -> None:
+        stale = seq != self._config_seq
+        self._config_inflight = False
+        if not stale:
             self.config = cfg
             if cfg.data_dir:
                 self.cli_data_dir = cfg.data_dir
@@ -2124,14 +2199,27 @@ class MainWindow(Gtk.ApplicationWindow):
             self._update_exclusion_dns_hint()
             if callback:
                 callback()
+        self._run_pending_config()
 
-        def failed(err: Exception) -> None:
-            self._config_inflight = False
+    def _config_error(self, err: Exception, silent: bool, seq: int) -> None:
+        stale = seq != self._config_seq
+        self._config_inflight = False
+        if not stale:
             log.warning("Config request failed: %s", err)
             if not silent:
                 self.toast(_("Настройки недоступны"), _("Не удалось прочитать конфигурацию CLI."), error=True)
+        self._run_pending_config()
 
-        self.run_async(self.cli.config_show, done, failed)
+    def _run_pending_config(self) -> None:
+        """Fulfil a config refresh dropped while a request was in flight."""
+        pending = self._config_refresh_pending
+        if pending is None:
+            return
+        self._config_refresh_pending = None
+        if not self._alive or self._shutting_down:
+            return
+        silent, callback = pending
+        self.refresh_config(silent=silent, callback=callback)
 
     def refresh_locations(self, silent: bool = True) -> None:
         if not self.cli.available or self._locations_inflight:
@@ -2230,6 +2318,8 @@ class MainWindow(Gtk.ApplicationWindow):
         def done(payload) -> None:
             _result, cfg = payload
             self.config = cfg
+            # Invalidate a config refresh still in flight.
+            self._config_seq += 1
             if cfg.data_dir:
                 self.cli_data_dir = cfg.data_dir
             self.clear_busy()
@@ -2274,6 +2364,8 @@ class MainWindow(Gtk.ApplicationWindow):
 
         def done(cfg: cli.AppConfig) -> None:
             self.config = cfg
+            # Invalidate a config refresh still in flight.
+            self._config_seq += 1
             self.clear_busy()
             self.settings_page.populate(
                 self.config, self.store.data.get("prefs", {}),
