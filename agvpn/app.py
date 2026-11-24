@@ -2628,6 +2628,10 @@ class MainWindow(Gtk.ApplicationWindow):
             ):
                 return
             action = "merge"
+        # The dialogs run a nested loop: another operation may have started.
+        if self._blocklist_op or self.busy_or_excl:
+            self.toast(_("Подождите"), _("Сейчас выполняется другая операция."), error=True)
+            return
         self._start_blocklist_apply(data, action)
 
     def _confirm_blocklist_action(self, new_count: int, existing_count: int) -> str | None:
@@ -3357,6 +3361,10 @@ class MainWindow(Gtk.ApplicationWindow):
         selected = dialog.get_filename() if response == Gtk.ResponseType.OK else None
         dialog.destroy()
         if not selected:
+            return
+        # The file dialog runs a nested loop: another operation may have started.
+        if self.busy_or_excl:
+            self.toast(_("Подождите"), _("Сейчас выполняется другая операция."), error=True)
             return
         target = Path(selected)
         self.set_busy("logs", _("Экспортируем журналы…"))
