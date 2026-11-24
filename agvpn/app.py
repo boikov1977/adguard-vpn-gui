@@ -1475,9 +1475,12 @@ class MainWindow(Gtk.ApplicationWindow):
         self.status_loaded = True
         old_state = previous.state
         new_state = status.state
-        if old_state != new_state:
+        if old_state != new_state or (previous.location or "") != (status.location or ""):
             # The CLI writes a fresh "Using endpoint" line on every connect;
-            # force the next UI refresh to pick it up.
+            # force the next UI refresh to pick it up.  A location switch can
+            # happen between two polls while the state stays "connected", so
+            # the location is compared too: the old line must not be recorded
+            # for the new server.
             self.endpoint_cache.invalidate()
 
         if status.connected:
