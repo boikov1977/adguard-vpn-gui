@@ -49,9 +49,13 @@ jobs:
       - name: Check English catalog is complete
         run: |
           set -euo pipefail
-          if msgattrib --untranslated agvpn/locale/en/LC_MESSAGES/adguard-vpn-gui.po | grep -q '^msgid '; then
+          untranslated="$(msgattrib --untranslated agvpn/locale/en/LC_MESSAGES/adguard-vpn-gui.po)"
+          # grep -c reads all input, so msgattrib cannot die from SIGPIPE (rc=141).
+          # Only rc=1 ("no matches") is expected; any other grep error fails the step.
+          count="$(printf '%s\n' "$untranslated" | grep -c '^msgid ' || [ "$?" -eq 1 ])"
+          if [ "$count" -gt 0 ]; then
             echo "Untranslated entries found in en.po:" >&2
-            msgattrib --untranslated agvpn/locale/en/LC_MESSAGES/adguard-vpn-gui.po >&2
+            printf '%s\n' "$untranslated" >&2
             exit 1
           fi
 

@@ -55,6 +55,28 @@ class NormalizationTests(unittest.TestCase):
         self.assertEqual(domains, ["nalog.xn--p1ai"])
         self.assertEqual(raw, 1)
 
+    def test_wildcard_is_treated_like_its_base_domain(self):
+        # ``*.ozon.com`` is subsumed by any rule covering ``ozon.com``, so the
+        # .ru rule drops it exactly like the bare domain.
+        self.assertEqual(
+            blocklist.normalize_domains(
+                ["ozon.ru", "ozon.by", "*.ozon.com", "*.ozon.by"]
+            ),
+            ["ozon.ru"],
+        )
+
+    def test_wildcard_survives_when_brand_has_no_ru(self):
+        # A bare TLD is not a valid host (HOST_RE), so the widest real rule is
+        # another zone of the same brand: without .ru the whole group is kept.
+        self.assertEqual(
+            blocklist.normalize_domains(["*.ozon.com", "ozon.by"]),
+            ["*.ozon.com", "ozon.by"],
+        )
+        self.assertEqual(
+            blocklist.normalize_domains(["*.ozon.com", "example.com"]),
+            ["*.ozon.com", "example.com"],
+        )
+
 
 class CacheTests(unittest.TestCase):
     def setUp(self):

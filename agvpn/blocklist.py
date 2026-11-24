@@ -92,7 +92,9 @@ def normalize_domains(domains) -> list[str]:
     groups: dict[str, list[str]] = {}
     order: list[str] = []
     for domain in unique_domains(domains):
-        base = domain.rsplit(".", 1)[0] if "." in domain else domain
+        # ``*.foo.bar`` must be subsumed exactly like ``foo.bar``.
+        name = domain[2:] if domain.startswith("*.") else domain
+        base = name.rsplit(".", 1)[0] if "." in name else name
         if base not in groups:
             groups[base] = []
             order.append(base)
