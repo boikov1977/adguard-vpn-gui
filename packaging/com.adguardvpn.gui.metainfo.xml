@@ -73,6 +73,16 @@
   </screenshots>
 
   <releases>
+    <release version="1.2.3" date="2026-11-24">
+      <description>
+        <p xml:lang="ru">Кэш endpoint не привязывает старый адрес к новой
+          локации, поздние ответы загрузки исключений после выхода из аккаунта
+          игнорируются, список локаций очищается при истечении сессии CLI.</p>
+        <p>The endpoint cache no longer attributes a stale address to a new
+          location, late exclusion loads after logout are ignored, and the
+          location list is cleared when the CLI session expires.</p>
+      </description>
+    </release>
     <release version="1.2.2" date="2026-11-24">
       <description>
         <p xml:lang="ru">Ужесточена проверка доменов в исключениях, исправлено

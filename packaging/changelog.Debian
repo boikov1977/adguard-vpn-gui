@@ -1,3 +1,25 @@
+adguard-vpn-gui (1.2.3) unstable; urgency=medium
+
+  * Кэш endpoint больше не отдаёт старый адрес новой локации при
+    переключении без смены состояния подключения.
+  * Поздние ответы загрузки исключений после выхода из аккаунта игнорируются,
+    страница разблокируется; тост при занятости операций с исключениями.
+  * Точное сопоставление локации (город и страна), очистка списка локаций
+    после истечения сессии CLI.
+  * Повторная проверка гейтов после модальных диалогов; распознан
+    «not logged in» без подстроки «you are».
+  * Удалён мёртвый код; .deb: чистка __pycache__ и автозапуска при
+    удалении пакета, TryExec в автозапуске.
+  * The endpoint cache no longer attributes a stale address to a newly
+    selected location; late exclusion loads after logout are ignored and
+    the page unlocks; exact location matching (city and country) and the
+    location list is cleared when the CLI session expires.
+  * Gates are rechecked after modal dialogs; bare "not logged in" is
+    recognised; dead code removed; the .deb now cleans __pycache__ and the
+    autostart entry on removal and writes TryExec.
+
+ -- boikov1977 <boikov1977@users.noreply.github.com>  Tue, 24 Nov 2026 22:00:00 +1000
+
 adguard-vpn-gui (1.2.2) unstable; urgency=medium
 
   * Проверка доменов в исключениях больше не принимает опции CLI

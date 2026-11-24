@@ -45,9 +45,9 @@ appstreamcli validate --no-net packaging/com.adguardvpn.gui.metainfo.xml
 ## Установка и удаление
 
 ```bash
-sudo apt install ./dist/adguard-vpn-gui_1.2.2_all.deb
+sudo apt install ./dist/adguard-vpn-gui_1.2.3_all.deb
 # или
-sudo dpkg -i dist/adguard-vpn-gui_1.2.2_all.deb
+sudo dpkg -i dist/adguard-vpn-gui_1.2.3_all.deb
 
 sudo apt remove adguard-vpn-gui
 sudo apt purge adguard-vpn-gui
@@ -120,8 +120,8 @@ GitHub Actions собирает пакет на каждом push и pull reques
 `desktop-file-validate` и `appstreamcli validate --no-net` (если инструменты
 доступны; в workflow они устанавливаются через apt). Пакет в CI не
 устанавливается и никуда не публикуется. Версия берётся из `APP_VERSION`,
-поэтому после её поднятия до 1.2.2 CI автоматически соберёт
-`adguard-vpn-gui_1.2.2_all.deb`.
+поэтому после её поднятия до 1.2.3 CI автоматически соберёт
+`adguard-vpn-gui_1.2.3_all.deb`.
 
 ## Права файлов
 

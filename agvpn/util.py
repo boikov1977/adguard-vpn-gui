@@ -18,7 +18,7 @@ from .i18n import _
 
 APP_NAME = "AdGuard VPN"
 APP_ID = "adguard-vpn-gui"
-APP_VERSION = "1.2.2"
+APP_VERSION = "1.2.3"
 
 PKG_DIR = Path(__file__).resolve().parent
 ASSETS_DIR = PKG_DIR / "assets"
