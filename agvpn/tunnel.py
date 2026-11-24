@@ -24,8 +24,7 @@ from pathlib import Path
 from . import util
 
 DEFAULT_LOG_PATH = util.CLI_DATA_DIR / "tunnel.log"
-# Kept for backwards compatibility: this is the window ``_read_tail`` uses and
-# the size of one backwards-scanning chunk.
+# The size of one backwards-scanning chunk (and of the tail-boundary probe).
 READ_TAIL_BYTES = 64 * 1024
 # How far back we are willing to look for the last endpoint line.  tunnel.log
 # can contain megabytes of per-second DNS noise after the connect record, so
@@ -106,34 +105,6 @@ def parse_line(line: str) -> Endpoint | None:
     )
 
 
-def _read_tail(path: Path, max_bytes: int = READ_TAIL_BYTES) -> str:
-    """Read at most ``max_bytes`` from the end of the file.
-
-    A partial first line is dropped only when the window really starts inside
-    it; a window that starts on a line boundary keeps its first line, and a
-    window without any newline is returned as-is.
-    """
-    with open(path, "rb") as handle:
-        handle.seek(0, os.SEEK_END)
-        size = handle.tell()
-        start = max(0, size - max_bytes)
-        boundary = b"\n"
-        if start > 0:
-            handle.seek(start - 1)
-            boundary = handle.read(1)
-        handle.seek(start)
-        data = handle.read()
-    text = data.decode("utf-8", errors="replace")
-    # Drop a partial first line only when the window really starts inside it.
-    # If the previous byte is a newline, start is already on a line boundary.
-    # If the window has no newline at all, keep the text as-is.
-    if start > 0 and boundary != b"\n":
-        newline = text.find("\n")
-        if newline >= 0:
-            text = text[newline + 1:]
-    return text
-
-
 def _decode(raw: bytes) -> str:
     return raw.decode("utf-8", errors="replace")
 
@@ -147,8 +118,7 @@ def _iter_lines_backwards(handle, size: int,
     that straddle a chunk boundary are reassembled before they are yielded, so
     a split record is never returned as two malformed halves.  The oldest line
     is dropped when the limit falls inside it; a file shorter than the limit
-    keeps its first line, and a window without any newline is yielded as-is
-    (the same tolerant behaviour as ``_read_tail``).
+    keeps its first line, and a window without any newline is yielded as-is.
     """
     limit = max(0, size - max_bytes)
     pos = size

@@ -122,7 +122,6 @@ class VpnStatus:
     raw: str = ""
     location: str | None = None
     details: list[str] = field(default_factory=list)
-    ip: str | None = None
 
     @property
     def connected(self) -> bool:
@@ -214,13 +213,6 @@ def _says_not_logged_in(text: str) -> bool:
     low = (text or "").lower()
     return ("you are not logged in" in low or "must log in" in low
             or "please log in" in low)
-
-
-def _first_nonempty(lines: Iterable[str]) -> str:
-    for line in lines:
-        if line.strip():
-            return line.strip()
-    return ""
 
 
 def describe_error(err: Exception) -> tuple[str, str]:
@@ -515,10 +507,6 @@ class AdGuardCLI:
                 value = value.strip(" .\"'")
                 if value and not status.location:
                     status.location = value
-            if re.search(r"\bip(v4)?(?: address)?\b", low):
-                match = re.search(r"\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}\b", line)
-                if match and not status.ip:
-                    status.ip = match.group(0)
         if status.state == "connected" and not status.location and lines:
             for line in lines[1:]:
                 if "mode" not in line.lower():

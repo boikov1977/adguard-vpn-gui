@@ -376,7 +376,6 @@ class MainWindow(Gtk.ApplicationWindow):
 
         self.busy = False
         self.busy_kind: str | None = None
-        self.busy_text = ""
         self.pending_state: str | None = None
 
         self._status_inflight = False
@@ -2103,7 +2102,6 @@ class MainWindow(Gtk.ApplicationWindow):
     def _progress(self, text: str, pending: str | None = None) -> bool:
         if not self.busy:
             return False
-        self.busy_text = text
         if pending:
             self.pending_state = pending
         try:
@@ -2132,7 +2130,6 @@ class MainWindow(Gtk.ApplicationWindow):
             self.cli.reset_askpass_retry_hint()
         self.busy = True
         self.busy_kind = kind
-        self.busy_text = text
         self.pending_state = pending
         try:
             self.busy_pill.start(text)
@@ -2143,7 +2140,6 @@ class MainWindow(Gtk.ApplicationWindow):
     def clear_busy(self, keep_pending: bool = False) -> None:
         self.busy = False
         self.busy_kind = None
-        self.busy_text = ""
         if not keep_pending:
             self.pending_state = None
         try:
@@ -3822,9 +3818,6 @@ class MainWindow(Gtk.ApplicationWindow):
         )
         self.power.set_sensitive(False)
         self._refresh_static_ui()
-
-    def _on_status_changed_from_operation(self, status: VpnStatus) -> None:
-        self.apply_status(status)
 
 
 def main(argv: list[str] | None = None) -> int:

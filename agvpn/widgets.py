@@ -110,23 +110,6 @@ def setting_row(title: str, description: str, control: Gtk.Widget,
     return row
 
 
-def separator() -> Gtk.Separator:
-    sep = Gtk.Separator(orientation=Gtk.Orientation.HORIZONTAL)
-    sep.set_margin_top(4)
-    sep.set_margin_bottom(4)
-    return sep
-
-
-def scroll_area(child: Gtk.Widget) -> Gtk.ScrolledWindow:
-    scroll = Gtk.ScrolledWindow()
-    scroll.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
-    scroll.set_hexpand(True)
-    scroll.set_vexpand(True)
-    scroll.get_style_context().add_class("content-scroll")
-    scroll.add(child)
-    return scroll
-
-
 # ---------------------------------------------------------------------------
 # Power button
 # ---------------------------------------------------------------------------

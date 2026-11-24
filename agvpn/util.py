@@ -1,7 +1,6 @@
 """Small shared helpers for the AdGuard VPN GUI."""
 from __future__ import annotations
 
-import html
 import logging
 import logging.handlers
 import os
@@ -12,7 +11,6 @@ import subprocess
 import sys
 import tempfile
 import time
-import unicodedata
 from datetime import datetime
 from pathlib import Path
 
@@ -190,26 +188,6 @@ def format_duration(seconds: float) -> str:
     h, rem = divmod(seconds, 3600)
     m, s = divmod(rem, 60)
     return f"{h:02d}:{m:02d}:{s:02d}" if h else f"{m:02d}:{s:02d}"
-
-
-def ellipsize(text: str, limit: int) -> str:
-    text = text or ""
-    if len(text) <= limit:
-        return text
-    return text[: max(0, limit - 1)].rstrip() + "…"
-
-
-def escape_markup(text: str) -> str:
-    return html.escape(text or "", quote=False)
-
-
-def normalize_space(text: str) -> str:
-    return re.sub(r"\s+", " ", (text or "").strip())
-
-
-def slug(text: str) -> str:
-    norm = unicodedata.normalize("NFKD", text or "").encode("ascii", "ignore").decode()
-    return re.sub(r"[^a-z0-9]+", "-", norm.lower()).strip("-")
 
 
 def parse_bool(value: str | None) -> bool | None:
