@@ -170,12 +170,23 @@ class _FakeWindow:
 
 
 class RefreshLocationsTests(unittest.TestCase):
-    def test_error_keeps_the_previous_locations(self):
+    def test_other_errors_keep_the_previous_locations(self):
         window = _FakeWindow(cli_with("Error: service unavailable\n", code=1))
         MainWindow.refresh_locations(window, silent=False)
         window.loc_cache.save.assert_not_called()
         window.show_error.assert_called_once()
         self.assertEqual([loc.city for loc in window.locations], ["Helsinki"])
+        window.locations_page.set_locations.assert_not_called()
+
+    def test_expired_session_clears_the_previous_locations(self):
+        # The CLI session is gone (logout/expiry): the cached list belongs to
+        # the previous account.  The file cache is left to the next real load.
+        window = _FakeWindow(cli_with(
+            "Please log in to get the list of available locations\n", code=11))
+        MainWindow.refresh_locations(window, silent=True)
+        self.assertEqual(window.locations, [])
+        window.locations_page.set_locations.assert_called_once_with([])
+        window.loc_cache.save.assert_not_called()
 
     def test_empty_answer_does_not_wipe_the_cache(self):
         window = _FakeWindow(cli_with(""))

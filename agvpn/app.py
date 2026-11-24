@@ -2299,6 +2299,12 @@ class MainWindow(Gtk.ApplicationWindow):
         def failed(err: Exception) -> None:
             self._locations_inflight = False
             log.warning("Location list failed: %s", err)
+            if isinstance(err, CliError) and err.kind == "not_logged_in":
+                # The session that fetched the list is gone: forget the servers
+                # of the previous account like a logout does (the cache file is
+                # kept — it is replaced by the next successful load).
+                self.locations = []
+                self.locations_page.set_locations([])
             if not silent:
                 self.clear_busy()
                 self.show_error(_("Не удалось получить локации"),
