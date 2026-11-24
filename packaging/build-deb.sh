@@ -181,6 +181,24 @@ if command -v update-desktop-database >/dev/null 2>&1; then
     update-desktop-database -q /usr/share/applications || true
 fi
 
+# Both cleanups run on remove and purge, never on upgrade: an upgrade keeps
+# the user's autostart choice.  `set -e` is guarded because a missing tree
+# must not fail the removal.
+case "$1" in
+    remove|purge)
+        # postinst's compileall creates these as root, so dpkg does not know
+        # about them and would leave /usr/lib/adguard-vpn-gui behind.
+        find /usr/lib/adguard-vpn-gui -type d -name __pycache__ \
+            -prune -exec rm -rf {} + 2>/dev/null || true
+        # The GUI writes one entry per user from its settings; a root script
+        # cannot see XDG_CONFIG_HOME overrides, so cover the default homes.
+        for dir in /home/*/.config/autostart /root/.config/autostart; do
+            [ -d "$dir" ] || continue
+            rm -f "$dir/adguard-vpn-gui.desktop" || true
+        done
+        ;;
+esac
+
 exit 0
 EOF
 chmod 0755 "$CTRL/postinst" "$CTRL/postrm"

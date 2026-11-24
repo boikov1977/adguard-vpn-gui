@@ -77,6 +77,21 @@ def status_poll_interval_ms(hidden: bool) -> int:
     return STATUS_POLL_HIDDEN_MS if hidden else STATUS_POLL_VISIBLE_MS
 
 
+def autostart_try_exec(script: Path) -> str:
+    """Path for the autostart entry's TryExec key.
+
+    The launcher ignores the entry when this file is not executable.  In a
+    DEB install /usr/bin/adguard-vpn-gui runs the packaged copy; from sources
+    the script itself is the application.  A source copy that is not
+    executable still runs through the interpreter (Exec), so fall back to it
+    instead of disabling the entry.
+    """
+    for candidate in (Path("/usr/bin/adguard-vpn-gui"), script):
+        if candidate.is_file() and os.access(candidate, os.X_OK):
+            return str(candidate)
+    return str(Path(sys.executable))
+
+
 def is_status_file_event(name) -> bool:
     """Return True when a monitor event belongs to a status-bearing CLI file.
 
@@ -2486,6 +2501,7 @@ class MainWindow(Gtk.ApplicationWindow):
                 "Name=AdGuard VPN\n"
                 "Comment=" + _("Графический интерфейс для AdGuard VPN CLI") + "\n"
                 f"Exec={exec_line}\n"
+                f"TryExec={autostart_try_exec(script)}\n"
                 f"Path={script.parent}\n"
                 f"Icon={util.ASSETS_DIR / 'icon-256.png'}\n"
                 "Terminal=false\n"
