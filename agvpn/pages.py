@@ -1,6 +1,7 @@
 """Pages of the AdGuard VPN GUI."""
 from __future__ import annotations
 
+import ipaddress
 import re
 from datetime import datetime
 
@@ -26,6 +27,20 @@ DOMAIN_RE = re.compile(
     # and are parsed by adguardvpn-cli as flags instead of sites.
     r"|^(?:\*\.)?[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?$"
 )
+
+
+def is_valid_exclusion(value: str) -> bool:
+    """True for a domain/wildcard or an IP/CIDR literal the CLI accepts.
+
+    ``site-exclusions add --help`` documents IPv4/IPv6 addresses (optionally
+    with a port) and CIDR ranges; ``ipaddress`` validates those precisely,
+    which a regex cannot do for IPv6.
+    """
+    try:
+        ipaddress.ip_network(value, strict=False)
+    except ValueError:
+        return bool(DOMAIN_RE.match(value))
+    return True
 
 
 def exclusion_control_state(items: list[str], busy: bool) -> dict[str, bool]:
@@ -991,7 +1006,7 @@ class ExclusionsPage(Page):
         if not domains:
             self.win.toast(_("Введите сайт"), _("Например, example.com"), error=True)
             return
-        bad = [domain for domain in domains if not DOMAIN_RE.match(domain)]
+        bad = [domain for domain in domains if not is_valid_exclusion(domain)]
         if bad:
             self.win.toast(
                 _("Проверьте написание"),

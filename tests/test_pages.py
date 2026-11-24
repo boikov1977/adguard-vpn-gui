@@ -236,5 +236,32 @@ class DomainRegexTests(unittest.TestCase):
                 self.assertTrue(pages.DOMAIN_RE.match(value), value)
 
 
+class ExclusionValidationTests(unittest.TestCase):
+    def test_ipv4_cidr_is_accepted(self):
+        for value in ("10.0.0.0/8", "192.168.1.0/24", "0.0.0.0/0",
+                      "172.16.5.4/16", "10.1.2.3/32"):
+            with self.subTest(value=value):
+                self.assertTrue(pages.is_valid_exclusion(value), value)
+
+    def test_ipv6_and_ipv6_cidr_are_accepted(self):
+        for value in ("2001:db8::1", "::1", "2001:db8::/32", "::/0",
+                      "2001:db8::1/128"):
+            with self.subTest(value=value):
+                self.assertTrue(pages.is_valid_exclusion(value), value)
+
+    def test_domains_and_wildcards_are_accepted(self):
+        for value in ("example.com", "*.example.org", "sub.example.co.uk",
+                      "localhost", "192.168.1.1:8080", "*.local"):
+            with self.subTest(value=value):
+                self.assertTrue(pages.is_valid_exclusion(value), value)
+
+    def test_malformed_values_are_rejected(self):
+        for value in ("999.1.1.1/8", "10.0.0.0/33", "10.0.0.0/",
+                      "::/zzz", "2001:db8::/129", "10.0.0.0/8/8",
+                      "--help", "a..b", ""):
+            with self.subTest(value=value):
+                self.assertFalse(pages.is_valid_exclusion(value), value)
+
+
 if __name__ == "__main__":
     unittest.main()
