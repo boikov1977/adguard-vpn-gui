@@ -67,11 +67,11 @@ sudo apt install python3 python3-gi python3-cairo python3-gi-cairo \
 
 ### Вариант 1 — готовый .deb (рекомендуется)
 
-Скачайте `adguard-vpn-gui_1.2.1_all.deb` со страницы
+Скачайте `adguard-vpn-gui_1.2.2_all.deb` со страницы
 [Releases](https://github.com/boikov1977/adguard-vpn-gui/releases) и установите:
 
 ```bash
-sudo apt install ./adguard-vpn-gui_1.2.1_all.deb
+sudo apt install ./adguard-vpn-gui_1.2.2_all.deb
 ```
 
 Пакет ставит приложение в `/usr/lib/adguard-vpn-gui`, лаунчер в
@@ -206,7 +206,7 @@ packaging/build-deb.sh
 иконки и метаданные AppStream. Установка:
 
 ```bash
-sudo apt install ./dist/adguard-vpn-gui_1.2.1_all.deb
+sudo apt install ./dist/adguard-vpn-gui_1.2.2_all.deb
 ```
 
 Пакет зависит от `python3-cairo`, `python3-gi-cairo` и `hicolor-icon-theme`
@@ -237,7 +237,7 @@ appstreamcli validate --no-net packaging/com.adguardvpn.gui.metainfo.xml
 
 Пакет в CI только собирается и проверяется — не устанавливается и не
 публикуется. Версия берётся из `APP_VERSION`, поэтому CI собирает
-`adguard-vpn-gui_1.2.1_all.deb`.
+`adguard-vpn-gui_1.2.2_all.deb`.
 
 Репозиторий и скриншоты в AppStream-метаданных публичные: ссылки
 `raw.githubusercontent.com/boikov1977/adguard-vpn-gui/main/...` работают.

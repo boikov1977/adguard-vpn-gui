@@ -1,3 +1,19 @@
+adguard-vpn-gui (1.2.2) unstable; urgency=medium
+
+  * Проверка доменов в исключениях больше не принимает опции CLI
+    (--help, -l, --for-mode) за адреса сайтов.
+  * Экранирование спецсимволов ($, обратная кавычка, %) в автозапуске
+    приведено к install.sh.
+  * Повреждённый state.json больше не останавливает таймер сессии.
+  * Общие atomic write и strip_ansi, per-user маркер askpass, исправлен
+    путь в README; добавлены регрессионные тесты и проверка en.po в CI.
+  * Domain validation rejects CLI options; autostart quoting matches
+    install.sh; corrupt connected_since no longer stops the session timer.
+  * Shared atomic writes and strip_ansi, per-user askpass marker, README
+    path fix, regression tests and an en.po completeness check in CI.
+
+ -- boikov1977 <boikov1977@users.noreply.github.com>  Tue, 24 Nov 2026 12:00:00 +0300
+
 adguard-vpn-gui (1.2.1) unstable; urgency=medium
 
   * Исправлен DNS для сайтов из исключений на системах с systemd-resolved:
