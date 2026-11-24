@@ -1051,8 +1051,6 @@ class MainWindow(Gtk.ApplicationWindow):
         if loc is None:
             log.info("Autoconnect skipped: no locations available")
             return False
-        if self.busy:
-            return False
         log.info("Autoconnecting to %s on startup", self._location_name(loc))
         self.connect_to(loc)
         return False

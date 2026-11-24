@@ -34,7 +34,6 @@ class _FakeWindow:
     def __init__(self) -> None:
         self._excl_op = False
         self._auto_connect_done = False
-        self._auto_connect_attempts = 0
         self._auto_connect_deadline = None
         self._auto_connect_scheduled = False
         self.status_loaded = False
