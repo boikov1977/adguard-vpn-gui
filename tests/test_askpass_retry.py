@@ -15,6 +15,7 @@ import tempfile
 import time
 import unittest
 from pathlib import Path
+from unittest import mock
 
 ROOT = Path(__file__).resolve().parent.parent
 
@@ -41,7 +42,7 @@ sys.path.insert(0, os.environ["PROJECT_ROOT"])
 
 import agvpn.askpass as askpass
 
-askpass.RETRY_FILE = os.environ["RETRY_FILE"]
+askpass.RETRY_FILE = os.environ.get("RETRY_FILE", askpass.RETRY_FILE)
 action = os.environ["ACTION"]
 
 if action == "mark":
@@ -56,6 +57,9 @@ elif action == "stale":
     print(askpass._mark_attempt())
     with open(askpass.RETRY_FILE, encoding="utf-8") as fh:
         print(fh.read().strip())
+elif action == "mark_default":
+    print(askpass.RETRY_FILE)
+    print(askpass._mark_attempt())
 elif action == "clear":
     askpass._clear_attempt()
     print(os.path.exists(askpass.RETRY_FILE))
@@ -144,6 +148,37 @@ class AskpassRetryTests(unittest.TestCase):
         retry, marker = result.stdout.splitlines()
         self.assertEqual(retry, "False")
         self.assertAlmostEqual(float(marker), time.time(), delta=60)
+
+    def test_cli_resets_the_marker_askpass_writes(self):
+        # No RETRY_FILE override here: askpass and cli must compute one path.
+        runtime = self.tmp / "runtime"
+        runtime.mkdir()
+        env = os.environ.copy()
+        env.update({
+            "STUB_GI": str(self.stub),
+            "PROJECT_ROOT": str(ROOT),
+            "XDG_RUNTIME_DIR": str(runtime),
+            "ACTION": "mark_default",
+        })
+        for key in ("SUDO_UID", "PKEXEC_UID", "RETRY_FILE"):
+            env.pop(key, None)
+        result = subprocess.run(
+            [sys.executable, str(self.helper)],
+            env=env, capture_output=True, text=True, timeout=30,
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        marker = Path(result.stdout.splitlines()[0])
+        self.assertEqual(marker.parent, runtime)
+        self.assertTrue(marker.exists())
+
+        sys.path.insert(0, str(ROOT))
+        from agvpn.cli import AdGuardCLI
+
+        with mock.patch.dict(os.environ, {"XDG_RUNTIME_DIR": str(runtime)}):
+            os.environ.pop("SUDO_UID", None)
+            os.environ.pop("PKEXEC_UID", None)
+            AdGuardCLI.__new__(AdGuardCLI).reset_askpass_retry_hint()
+        self.assertFalse(marker.exists())
 
     def test_clear_is_best_effort(self):
         self.retry_file.write_text("123", encoding="utf-8")

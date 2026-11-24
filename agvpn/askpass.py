@@ -11,7 +11,6 @@ import os
 import resource
 import signal
 import sys
-import tempfile
 import time
 
 try:
@@ -28,6 +27,8 @@ ROOT = os.path.dirname(HERE)
 if ROOT not in sys.path:
     sys.path.insert(0, ROOT)
 
+from agvpn import util
+
 try:  # pragma: no cover - exercised when launched by sudo as a script
     from agvpn.i18n import _
 except Exception:  # keep the password dialog usable even without the package
@@ -38,19 +39,7 @@ ASSETS = os.path.join(HERE, "assets")
 STYLE = os.path.join(HERE, "style.css")
 
 
-def _retry_file_path() -> str:
-    """Per-user retry marker, safe even in the shared ``/tmp`` fallback."""
-    directory = os.environ.get("XDG_RUNTIME_DIR") or tempfile.gettempdir()
-    uid = str(os.getuid())
-    for key in ("SUDO_UID", "PKEXEC_UID"):
-        value = os.environ.get(key, "")
-        if value.isdigit():
-            uid = value
-            break
-    return os.path.join(directory, f"agvpn-gui-askpass-attempt-{uid}")
-
-
-RETRY_FILE = _retry_file_path()
+RETRY_FILE = util.askpass_retry_path()
 
 CSS = b"""
 window.askpass-window {

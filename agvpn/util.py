@@ -27,6 +27,22 @@ ASSETS_DIR = PKG_DIR / "assets"
 STYLE_PATH = PKG_DIR / "style.css"
 ASKPASS_PATH = PKG_DIR / "askpass.py"
 
+
+def askpass_retry_path() -> str:
+    """Path of the per-user askpass retry marker (one source of truth).
+
+    The askpass helper writes it and the CLI wrapper removes it, so both must
+    compute the same name, including the ``SUDO_UID``/``PKEXEC_UID`` override.
+    """
+    directory = os.environ.get("XDG_RUNTIME_DIR") or tempfile.gettempdir()
+    uid = str(os.getuid())
+    for key in ("SUDO_UID", "PKEXEC_UID"):
+        value = os.environ.get(key, "")
+        if value.isdigit():
+            uid = value
+            break
+    return os.path.join(directory, f"agvpn-gui-askpass-attempt-{uid}")
+
 HOME = Path.home()
 CONFIG_DIR = Path(os.environ.get("XDG_CONFIG_HOME", HOME / ".config")) / APP_ID
 CACHE_DIR = Path(os.environ.get("XDG_CACHE_HOME", HOME / ".cache")) / APP_ID

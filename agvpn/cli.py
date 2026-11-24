@@ -308,7 +308,7 @@ class AdGuardCLI:
     def reset_askpass_retry_hint(self) -> None:
         """Forget that a previous operation had a failed password attempt."""
         try:
-            (Path(os.environ.get("XDG_RUNTIME_DIR", "/tmp")) / "agvpn-gui-askpass-attempt").unlink()
+            Path(util.askpass_retry_path()).unlink()
         except Exception:
             pass
 
