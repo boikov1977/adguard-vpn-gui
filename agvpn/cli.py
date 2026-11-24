@@ -211,7 +211,7 @@ def _clean_lines(text: str) -> list[str]:
 
 def _says_not_logged_in(text: str) -> bool:
     low = (text or "").lower()
-    return ("you are not logged in" in low or "must log in" in low
+    return ("not logged in" in low or "must log in" in low
             or "please log in" in low)
 
 

@@ -53,6 +53,14 @@ class ReadOnlyErrorTests(unittest.TestCase):
         status = cli_with("Please log in to check status\n", code=11).status()
         self.assertEqual(status.state, "disconnected")
 
+    def test_status_with_bare_not_logged_in_text(self):
+        # The CLI's short form; the old parser accepted it as a plain substring.
+        self.assertEqual(AdGuardCLI.parse_status("Not logged in").state,
+                         "disconnected")
+        status = cli_with("Not logged in\n", code=11).status()
+        self.assertEqual(status.state, "disconnected")
+        self.assertIn("not logged in", status.raw.lower())
+
     def test_version_error_is_raised(self):
         with self.assertRaises(CliError):
             cli_with("Error: service unavailable\n", code=1).version()
