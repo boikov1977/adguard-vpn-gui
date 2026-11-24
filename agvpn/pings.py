@@ -25,6 +25,9 @@ log = util.get_logger("pings")
 CACHE_FILE = util.CACHE_DIR / "endpoints.json"
 MAX_AGE = timedelta(days=7)
 PRUNE_AGE = timedelta(days=90)
+# A small forward skew is normal clock drift between the log and the GUI; a
+# bigger jump means broken clocks or a corrupt timestamp and is not fresh.
+FUTURE_TOLERANCE = timedelta(minutes=5)
 VERSION = 1
 
 
@@ -55,12 +58,37 @@ def history_text(ping: int | None, measured_at: datetime | None) -> str:
     return f"{util.human_ping(ping)} · {date}" if date else util.human_ping(ping)
 
 
+def _local_aware(value) -> datetime | None:
+    """Return *value* as an aware datetime in local time, or ``None``.
+
+    ``tunnel.log`` timestamps are naive local wall time, so ``astimezone()``
+    interprets them with the system timezone rules; in the ambiguous repeated
+    hour of a DST fall-back Python picks ``fold=0`` (the first occurrence).
+    Aware values are converted to the same local zone, which keeps comparisons
+    on absolute instants instead of wall-clock digits.
+    """
+    if not isinstance(value, datetime):
+        return None
+    try:
+        return value.astimezone()
+    except (OverflowError, OSError, ValueError):
+        return None
+
+
 def is_fresh(measured_at: datetime | None, now: datetime | None = None,
              max_age: timedelta = MAX_AGE) -> bool:
-    if measured_at is None:
+    measured = _local_aware(measured_at)
+    if measured is None:
         return False
-    now = now or datetime.now()
-    return now - measured_at <= max_age
+    current = _local_aware(now) if now is not None else datetime.now().astimezone()
+    if current is None:
+        return False
+    if measured > current + FUTURE_TOLERANCE:
+        return False
+    try:
+        return current - measured <= max_age
+    except TypeError:
+        return False
 
 
 @dataclass(frozen=True)
@@ -83,8 +111,11 @@ def _measurement_from_dict(value) -> Measurement | None:
     if ping < 0 or ping >= 9999:
         return None
     try:
-        measured_at = datetime.fromisoformat(str(value.get("measured_at")))
-    except (TypeError, ValueError):
+        measured_at = _local_aware(
+            datetime.fromisoformat(str(value.get("measured_at"))))
+    except (TypeError, ValueError, OverflowError, OSError):
+        return None
+    if measured_at is None:
         return None
     return Measurement(
         endpoint=str(value.get("endpoint") or ""),
@@ -161,27 +192,39 @@ class EndpointHistory:
         key = location_key(getattr(loc, "iso", ""), getattr(loc, "city", ""))
         if key is None:
             return False
-        now = now or datetime.now()
+        now = _local_aware(now) if now is not None else None
+        now = now or datetime.now().astimezone()
         try:
             ping = int(endpoint.ping)
         except (TypeError, ValueError):
             return False
         with self._lock:
             previous = self._items.get(key)
-            measured_at = endpoint.measured_at
+            measured_at = _local_aware(endpoint.measured_at)
+            if measured_at is not None and measured_at > now + FUTURE_TOLERANCE:
+                # A timestamp far ahead is corrupt: treat it as "no timestamp"
+                # so it cannot block valid measurements forever.
+                measured_at = None
             if measured_at is None:
-                # Without a log timestamp, keep the first record time instead
-                # of rewriting the file on every poll.
+                # Without a usable log timestamp, keep the first record time
+                # instead of rewriting the file on every poll.
                 if (previous is not None and previous.ping == ping
                         and previous.endpoint == (endpoint.name or "")
                         and previous.address == (endpoint.address or "")):
                     return False
                 measured_at = now
+            measured_at = measured_at.replace(microsecond=0)
+            if (previous is not None
+                    and previous.measured_at <= now + FUTURE_TOLERANCE
+                    and measured_at < previous.measured_at):
+                # An older measurement must not replace a newer one.  A stored
+                # value from the corrupt-future past is not a valid baseline.
+                return False
             measurement = Measurement(
                 endpoint=endpoint.name or "",
                 address=endpoint.address or "",
                 ping=ping,
-                measured_at=measured_at.replace(microsecond=0),
+                measured_at=measured_at,
             )
             if previous == measurement:
                 return False
