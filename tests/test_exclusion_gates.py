@@ -15,7 +15,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
 from agvpn.app import MainWindow  # noqa: E402
-from agvpn.cli import Location, VpnStatus  # noqa: E402
+from agvpn.cli import License, Location, VpnStatus  # noqa: E402
 from agvpn.pages import ExclusionsPage  # noqa: E402
 
 
@@ -98,6 +98,7 @@ def _page(window) -> ExclusionsPage:
     page._update_mode_text = mock.Mock()
     page._on_mode_change = types.MethodType(ExclusionsPage._on_mode_change, page)
     page._add = types.MethodType(ExclusionsPage._add, page)
+    page.reset = types.MethodType(ExclusionsPage.reset, page)
     return page
 
 
@@ -196,3 +197,65 @@ class ExclusionGateTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class ExclusionReloadTests(unittest.TestCase):
+    def test_logout_resets_the_page_flag(self):
+        window = _FakeWindow()
+        page = _page(window)
+        page._loaded = True
+        window.exclusions_page = page
+        window.confirm = mock.Mock(return_value=True)
+        window.locations_page = mock.Mock()
+        window.refresh_license = mock.Mock()
+        window.refresh_status = mock.Mock()
+        window.confirm_logout = types.MethodType(MainWindow.confirm_logout, window)
+
+        window.confirm_logout()
+
+        self.assertFalse(window._exclusions_loaded)
+        self.assertFalse(page._loaded)
+
+    def test_not_logged_in_license_resets_the_page_flag(self):
+        window = _FakeWindow()
+        page = _page(window)
+        page._loaded = True
+        window.exclusions_page = page
+        window._license_seq = 1
+        window._license_inflight = True
+        window.account_page = mock.Mock()
+        window._update_account_chip = mock.Mock()
+        window._run_pending_license = mock.Mock()
+        window._license_done = types.MethodType(MainWindow._license_done, window)
+
+        window._license_done(License(logged_in=False), False, 1)
+
+        self.assertFalse(window._exclusions_loaded)
+        self.assertFalse(page._loaded)
+
+    def test_shown_after_reset_reloads_the_list(self):
+        window = _FakeWindow()
+        page = _page(window)
+        page._loaded = False
+        page.set_data = mock.Mock()
+        window.exclusions_page = page
+        window.load_blocklist_cache = mock.Mock()
+        window.load_exclusions = types.MethodType(MainWindow.load_exclusions, window)
+        page.shown = types.MethodType(ExclusionsPage.shown, page)
+
+        page.shown()
+
+        window.cli.exclusion_mode.assert_called_once()
+        self.assertTrue(window._exclusions_loaded)
+
+    def test_shown_loaded_page_does_not_reload(self):
+        window = _FakeWindow()
+        page = _page(window)
+        page._loaded = True
+        window.load_blocklist_cache = mock.Mock()
+        window.load_exclusions = mock.Mock()
+        page.shown = types.MethodType(ExclusionsPage.shown, page)
+
+        page.shown()
+
+        window.load_exclusions.assert_not_called()

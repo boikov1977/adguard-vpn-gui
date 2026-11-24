@@ -811,6 +811,10 @@ class ExclusionsPage(Page):
         if not self._loaded:
             self.win.load_exclusions()
 
+    def reset(self) -> None:
+        """Mark the list as not loaded, e.g. when the account changes."""
+        self._loaded = False
+
     def _on_mode_change(self, mode: str) -> None:
         if mode == self._mode:
             return

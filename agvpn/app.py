@@ -2180,6 +2180,7 @@ class MainWindow(Gtk.ApplicationWindow):
             self._update_account_chip()
             if not license_obj.logged_in:
                 self._exclusions_loaded = False
+                self.exclusions_page.reset()
                 self._update_exclusion_badge()
             self._maybe_autoconnect()
         self._run_pending_license()
@@ -3137,6 +3138,7 @@ class MainWindow(Gtk.ApplicationWindow):
             self.locations = []
             self.locations_page.set_locations([])
             self._exclusions_loaded = False
+            self.exclusions_page.reset()
             self._update_exclusion_badge()
 
         def failed(err: Exception) -> None:

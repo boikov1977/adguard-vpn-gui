@@ -91,6 +91,7 @@ class _FakeWindow:
         self.confirm = mock.Mock(return_value=True)
         self.locations_page = mock.Mock()
         self.account_page = mock.Mock()
+        self.exclusions_page = mock.Mock()
         self.settings_page = mock.Mock()
         self.dashboard = mock.Mock()
         self.toast = mock.Mock()
