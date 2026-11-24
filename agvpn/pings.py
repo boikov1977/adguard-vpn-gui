@@ -12,9 +12,7 @@ shows the estimate (``≈``) when there is no fresh measurement.
 from __future__ import annotations
 
 import json
-import os
 import re
-import tempfile
 import threading
 from dataclasses import dataclass
 from datetime import datetime, timedelta
@@ -105,27 +103,6 @@ def _measurement_to_dict(measurement: Measurement) -> dict:
     }
 
 
-def _atomic_write(path: Path, data: str) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    handle = tempfile.NamedTemporaryFile(
-        "w", encoding="utf-8", dir=str(path.parent),
-        prefix=path.name + ".", delete=False,
-    )
-    try:
-        handle.write(data)
-        handle.flush()
-        os.fsync(handle.fileno())
-        os.chmod(handle.name, 0o600)
-        handle.close()
-        os.replace(handle.name, path)
-    finally:
-        try:
-            if not handle.closed:
-                handle.close()
-        except Exception:
-            pass
-
-
 class EndpointHistory:
     """Persistent, thread-safe history of real measurements.
 
@@ -172,7 +149,7 @@ class EndpointHistory:
             },
         }
         try:
-            _atomic_write(self.path, json.dumps(payload, ensure_ascii=False, indent=2))
+            util.atomic_write_text(self.path, json.dumps(payload, ensure_ascii=False, indent=2))
         except Exception:
             log.warning("Could not save endpoint history", exc_info=True)
 

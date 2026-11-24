@@ -1,7 +1,6 @@
 """Small shared helpers for the AdGuard VPN GUI."""
 from __future__ import annotations
 
-import functools
 import html
 import logging
 import logging.handlers
@@ -11,6 +10,7 @@ import shlex
 import shutil
 import subprocess
 import sys
+import tempfile
 import time
 import unicodedata
 from datetime import datetime
@@ -41,6 +41,28 @@ _log_ready = False
 
 def strip_ansi(text: str) -> str:
     return ANSI_RE.sub("", text or "").replace("\r\n", "\n").replace("\r", "\n")
+
+
+def atomic_write_text(path: str | Path, data: str, mode: int = 0o600) -> None:
+    """Write *data* to *path* atomically and leave no temp files on failure."""
+    target = Path(path)
+    target.parent.mkdir(parents=True, exist_ok=True)
+    fd, temp_name = tempfile.mkstemp(
+        dir=str(target.parent), prefix=target.name + "."
+    )
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as handle:
+            handle.write(data)
+            handle.flush()
+            os.fsync(handle.fileno())
+        os.chmod(temp_name, mode)
+        os.replace(temp_name, target)
+    except BaseException:
+        try:
+            os.unlink(temp_name)
+        except OSError:
+            pass
+        raise
 
 
 class _PrivateRotatingFileHandler(logging.handlers.RotatingFileHandler):
@@ -354,22 +376,6 @@ def notify(title: str, body: str, icon: str | None = None) -> None:
         subprocess.Popen(argv, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     except Exception:
         pass
-
-
-def guard(func):
-    """Keep GTK callbacks from taking the whole application down."""
-    @functools.wraps(func)
-    def wrapper(*args, **kwargs):
-        try:
-            return func(*args, **kwargs)
-        except Exception:
-            get_logger("guard").exception("Unhandled error in %s", func.__qualname__)
-            try:
-                report_exception()
-            except Exception:
-                pass
-            return None
-    return wrapper
 
 
 _exception_reporter = None

@@ -2316,7 +2316,16 @@ class MainWindow(Gtk.ApplicationWindow):
 
     @staticmethod
     def _desktop_quote(value: str) -> str:
-        escaped = value.replace("\\", "\\\\").replace('"', '\\"')
+        # Desktop Entry \"Exec\" quoting, matching install.sh: backslashes,
+        # double quotes, backticks and dollars are escaped, and percent signs
+        # are doubled (a lone % is a field code to the desktop launcher).
+        escaped = (
+            value.replace("\\", "\\\\")
+            .replace('"', '\\"')
+            .replace("`", "\\`")
+            .replace("$", "\\$")
+            .replace("%", "%%")
+        )
         return f'"{escaped}"'
 
     def _write_autostart(self, enabled: bool) -> bool:

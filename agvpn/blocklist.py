@@ -16,9 +16,7 @@ presses the button.
 from __future__ import annotations
 
 import json
-import os
 import re
-import tempfile
 import urllib.error
 import urllib.request
 from dataclasses import dataclass
@@ -113,27 +111,6 @@ def parse_text(text: str) -> tuple[list[str], int]:
     return normalize_domains(raw), len(raw)
 
 
-def _atomic_write(path: Path, data: str) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    handle = tempfile.NamedTemporaryFile(
-        "w", encoding="utf-8", dir=str(path.parent),
-        prefix=path.name + ".", delete=False,
-    )
-    try:
-        handle.write(data)
-        handle.flush()
-        os.fsync(handle.fileno())
-        os.chmod(handle.name, 0o600)
-        handle.close()
-        os.replace(handle.name, path)
-    finally:
-        try:
-            if not handle.closed:
-                handle.close()
-        except Exception:
-            pass
-
-
 def load_cache(path: str | Path | None = None) -> Blocklist | None:
     """Read the last downloaded list.  Missing/corrupt cache means ``None``."""
     target = Path(path) if path is not None else CACHE_FILE
@@ -181,7 +158,7 @@ def save_cache(data: Blocklist, path: str | Path | None = None) -> None:
         "raw_count": data.raw_count,
         "domains": list(data.domains),
     }
-    _atomic_write(target, json.dumps(payload, ensure_ascii=False, indent=2))
+    util.atomic_write_text(target, json.dumps(payload, ensure_ascii=False, indent=2))
 
 
 def fetch(url: str = SOURCE_URL, timeout: float = 20) -> Blocklist:

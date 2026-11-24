@@ -21,7 +21,10 @@ from .widgets import (  # noqa: E402
 DOMAIN_RE = re.compile(
     r"^(?:\*\.)?(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,63}$"
     r"|^(?:\d{1,3}\.){3}\d{1,3}(?::\d{1,5})?$"
-    r"|^(?:\*\.)?[a-zA-Z0-9-]+$"
+    # Single-label hostnames must still start and end with an alphanumeric:
+    # otherwise ``--help``, ``-l`` and similar CLI options pass as "domains"
+    # and are parsed by adguardvpn-cli as flags instead of sites.
+    r"|^(?:\*\.)?[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?$"
 )
 
 

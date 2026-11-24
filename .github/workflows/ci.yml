@@ -46,6 +46,15 @@ jobs:
       - name: Validate gettext catalog
         run: msgfmt --check -o /tmp/adguard-vpn-gui.mo agvpn/locale/en/LC_MESSAGES/adguard-vpn-gui.po
 
+      - name: Check English catalog is complete
+        run: |
+          set -euo pipefail
+          if msgattrib --untranslated agvpn/locale/en/LC_MESSAGES/adguard-vpn-gui.po | grep -q '^msgid '; then
+            echo "Untranslated entries found in en.po:" >&2
+            msgattrib --untranslated agvpn/locale/en/LC_MESSAGES/adguard-vpn-gui.po >&2
+            exit 1
+          fi
+
       - name: Build .deb
         run: packaging/build-deb.sh
 
