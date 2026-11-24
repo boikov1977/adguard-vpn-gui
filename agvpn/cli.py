@@ -210,6 +210,12 @@ def _clean_lines(text: str) -> list[str]:
     return [line.rstrip() for line in strip_ansi(text).splitlines()]
 
 
+def _says_not_logged_in(text: str) -> bool:
+    low = (text or "").lower()
+    return ("you are not logged in" in low or "must log in" in low
+            or "please log in" in low)
+
+
 def _first_nonempty(lines: Iterable[str]) -> str:
     for line in lines:
         if line.strip():
@@ -447,6 +453,8 @@ class AdGuardCLI:
         if self._version and not refresh:
             return self._version
         result = self._run(["--version"], timeout=15)
+        if result.code != 0:
+            self._raise_for_output(result)
         text = result.text
         match = re.search(r"v?(\d+(?:\.\d+){1,3})", text)
         self._version = match.group(1) if match else (text.splitlines()[0] if text else "?")
@@ -454,6 +462,14 @@ class AdGuardCLI:
 
     def status(self, timeout: float = 20) -> VpnStatus:
         result = self._run(["status"], timeout=timeout)
+        if result.code != 0 and not _says_not_logged_in(result.text):
+            # shortcut: rc for a stopped tunnel is unverified (disconnecting
+            # here is not allowed), so accept any state the CLI still
+            # describes; only unparseable output is a real error.
+            parsed = self.parse_status(result.text)
+            if parsed.state == "unknown":
+                self._raise_for_output(result)
+            return parsed
         return self.parse_status(result.text)
 
     @staticmethod
@@ -472,7 +488,7 @@ class AdGuardCLI:
             status.state = "connecting"
         elif "status unavailable" in first or "vpn active" in first:
             status.state = "active"
-        elif "not logged in" in raw.lower():
+        elif _says_not_logged_in(raw):
             status.state = "disconnected"
         elif any("connected to" in line.lower() for line in lines):
             status.state = "connected"
@@ -531,7 +547,7 @@ class AdGuardCLI:
             raise CliError("Incorrect administrator password", kind="auth_failed", result=result)
         if "a terminal is required" in low or "no tty present" in low:
             raise CliError("No way to ask for a password", kind="auth_unavailable", result=result)
-        if "you are not logged in" in low or "must log in" in low or "please log in" in low:
+        if _says_not_logged_in(text):
             raise CliError("Not logged in", kind="not_logged_in", result=result)
         if "location unavailable" in low or "location does not exist" in low:
             raise CliError("Location unavailable", kind="location", result=result)
@@ -596,6 +612,8 @@ class AdGuardCLI:
 
     def license(self, timeout: float = 25) -> License:
         result = self._run(["license"], timeout=timeout)
+        if result.code != 0 and not _says_not_logged_in(result.text):
+            self._raise_for_output(result)
         return self.parse_license(result.text)
 
     @staticmethod
@@ -624,6 +642,8 @@ class AdGuardCLI:
 
     def list_locations(self, timeout: float = 60) -> list[Location]:
         result = self._run(["list-locations"], timeout=timeout)
+        if result.code != 0:
+            self._raise_for_output(result)
         return self.parse_locations(result.text)
 
     @staticmethod
@@ -668,6 +688,8 @@ class AdGuardCLI:
 
     def config_show(self, timeout: float = 30) -> AppConfig:
         result = self._run(["config", "show"], timeout=timeout)
+        if result.code != 0:
+            self._raise_for_output(result)
         return self.parse_config(result.text)
 
     @staticmethod
@@ -834,12 +856,17 @@ class AdGuardCLI:
         result = self._run(["check-update"], timeout=timeout)
         text = result.text.strip()
         low = text.lower()
-        if "latest version" in low or "up to date" in low:
+        # The CLI documents rc=17 as "already using the latest version".
+        if result.code == 17:
             return False, text
-        match = re.search(r"v(\d+(?:\.\d+)+)\s+is now available", text)
-        if match or "available" in low:
+        if result.code != 0:
+            self._raise_for_output(result)
+        if "latest version" in low or "up to date" in low or "no updates" in low:
+            return False, text
+        # Match the version message: "available" alone also matches "unavailable".
+        if re.search(r"v?\d+(?:\.\d+)+\s+is now available", text):
             return True, text
-        return False, text
+        raise CliError("Unexpected update check output", kind="unknown", result=result)
 
     def update(self, timeout: float = 300) -> CliResult:
         """Run the official CLI updater non-interactively."""

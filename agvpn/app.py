@@ -2143,7 +2143,21 @@ class MainWindow(Gtk.ApplicationWindow):
         if not silent:
             self.set_busy("locations", _("Обновляем список локаций…"))
 
+        def failed(err: Exception) -> None:
+            self._locations_inflight = False
+            log.warning("Location list failed: %s", err)
+            if not silent:
+                self.clear_busy()
+                self.show_error(_("Не удалось получить локации"),
+                                _("Проверьте интернет и повторите попытку."),
+                                err.details if isinstance(err, CliError) else str(err))
+            self.locations_page.refresh()
+
         def done(items: list[Location]) -> None:
+            if not items:
+                # An empty answer must not replace the cache on disk.
+                failed(CliError("Location list is empty", kind="unknown"))
+                return
             self._locations_inflight = False
             self.locations = items
             try:
@@ -2163,16 +2177,6 @@ class MainWindow(Gtk.ApplicationWindow):
             self.dashboard.refresh()
             self._update_location_widgets()
             self._rebuild_tray_locations()
-
-        def failed(err: Exception) -> None:
-            self._locations_inflight = False
-            log.warning("Location list failed: %s", err)
-            if not silent:
-                self.clear_busy()
-                self.show_error(_("Не удалось получить локации"),
-                                _("Проверьте интернет и повторите попытку."),
-                                err.details if isinstance(err, CliError) else str(err))
-            self.locations_page.refresh()
 
         self.run_async(self.cli.list_locations, done, failed)
 
