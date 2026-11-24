@@ -344,6 +344,15 @@ class AdGuardCLI:
             self._active.add(proc)
             if cancel_event is not None:
                 self._cancelable[proc] = cancel_event
+            closing = self._closing
+        if closing:
+            # shutdown() started while this process was being spawned: the
+            # registration above is what lets us see it and stop it now.
+            self._terminate(proc)
+            with self._active_lock:
+                self._active.discard(proc)
+                self._cancelable.pop(proc, None)
+            raise CliError("Application is closing", kind="busy")
         if cancel_event is not None and cancel_event.is_set():
             self._abort_process(proc)
         timed_out = False
@@ -393,8 +402,10 @@ class AdGuardCLI:
 
     def shutdown(self) -> None:
         """Terminate in-flight CLI processes (and their askpass dialogs)."""
-        self._closing = True
+        # The flag and the process list are updated under one lock, so a run
+        # that registers concurrently either sees the flag or is seen here.
         with self._active_lock:
+            self._closing = True
             procs = list(self._active)
         for proc in procs:
             self._terminate(proc)
@@ -460,8 +471,9 @@ class AdGuardCLI:
         self._version = match.group(1) if match else (text.splitlines()[0] if text else "?")
         return self._version
 
-    def status(self, timeout: float = 20) -> VpnStatus:
-        result = self._run(["status"], timeout=timeout)
+    def status(self, timeout: float = 20,
+               cancel_event: threading.Event | None = None) -> VpnStatus:
+        result = self._run(["status"], timeout=timeout, cancel_event=cancel_event)
         if result.code != 0 and not _says_not_logged_in(result.text):
             # shortcut: rc for a stopped tunnel is unverified (disconnecting
             # here is not allowed), so accept any state the CLI still
@@ -576,9 +588,9 @@ class AdGuardCLI:
         while time.monotonic() < deadline:
             raise_if_cancelled(cancel_event)
             try:
-                last = self.status(timeout=15)
+                last = self.status(timeout=15, cancel_event=cancel_event)
             except CliError as exc:
-                if exc.kind == "missing":
+                if exc.kind in ("missing", "cancelled"):
                     raise
                 last = VpnStatus(state="unknown", raw=str(exc))
             if on_tick:

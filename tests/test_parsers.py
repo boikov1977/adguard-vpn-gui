@@ -218,7 +218,7 @@ class WaitForStateTests(unittest.TestCase):
         sequence = iter(states)
         current = {"state": states[-1]}
 
-        def status(_self, timeout: float = 15) -> VpnStatus:
+        def status(_self, timeout: float = 15, cancel_event=None) -> VpnStatus:
             try:
                 current["state"] = next(sequence)
             except StopIteration:
@@ -301,7 +301,7 @@ class WaitForStateTests(unittest.TestCase):
             calls.append(list(args))
             return CliResult(argv=list(args), code=0, stdout="VPN is connected", stderr="")
 
-        def status(_self, timeout: float = 15) -> VpnStatus:
+        def status(_self, timeout: float = 15, cancel_event=None) -> VpnStatus:
             event.set()  # user pressed Cancel while the worker was waiting
             return VpnStatus(state="disconnected")
 
