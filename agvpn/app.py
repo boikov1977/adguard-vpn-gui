@@ -978,7 +978,7 @@ class MainWindow(Gtk.ApplicationWindow):
         if not self.cli.available:
             self._auto_connect_done = True
             return False
-        if self.busy or self._blocklist_op:
+        if self.busy_or_excl or self._blocklist_op:
             self._auto_connect_done = True
             log.info("Autoconnect skipped: another operation is in progress")
             return False
@@ -1093,7 +1093,7 @@ class MainWindow(Gtk.ApplicationWindow):
     def request_quit(self) -> None:
         if self._shutting_down:
             return
-        if self.busy or self._blocklist_op:
+        if self.busy_or_excl or self._blocklist_op:
             self.show_window(hidden=False)
             if not self.confirm(
                 _("Операция выполняется"),
@@ -1592,8 +1592,14 @@ class MainWindow(Gtk.ApplicationWindow):
         if self.store.recent_keys != before:
             self._rebuild_tray_locations()
 
+    @property
+    def busy_or_excl(self) -> bool:
+        """True while an operation owns the CLI: connect/disconnect or exclusions."""
+        return self.busy or self._excl_op
+
     def toggle_connection(self) -> None:
-        if self.busy:
+        if self.busy_or_excl:
+            self.toast(_("Подождите"), _("Сейчас выполняется другая операция."), error=True)
             return
         if self.status.connected:
             self.disconnect()
@@ -1607,7 +1613,8 @@ class MainWindow(Gtk.ApplicationWindow):
             self._start_connect(None, _("локации с лучшей оценкой"), None, fastest=True)
 
     def connect_fastest(self) -> None:
-        if self.busy:
+        if self.busy_or_excl:
+            self.toast(_("Подождите"), _("Сейчас выполняется другая операция."), error=True)
             return
         if not self.cli.available:
             self._cli_missing()
@@ -1618,7 +1625,7 @@ class MainWindow(Gtk.ApplicationWindow):
             self._start_connect(None, _("локации с лучшей оценкой"), None, fastest=True)
 
     def connect_to(self, loc: Location) -> None:
-        if self.busy:
+        if self.busy_or_excl:
             self.toast(_("Подождите"), _("Сейчас выполняется другая операция."), error=True)
             return
         if not self.cli.available:
@@ -1638,7 +1645,7 @@ class MainWindow(Gtk.ApplicationWindow):
 
     def _start_connect(self, query: str | None, name: str, loc: Location | None,
                        fastest: bool = False) -> None:
-        if self.busy:
+        if self.busy_or_excl:
             return
         switching = self.status.connected
         self._pending_target = loc
@@ -1858,7 +1865,7 @@ class MainWindow(Gtk.ApplicationWindow):
     def _rollback_to(self, previous: Location) -> None:
         if previous is None or self._rollback_attempted:
             return
-        if self.busy or self._excl_op:
+        if self.busy_or_excl:
             log.warning("Rollback skipped: another operation is in progress")
             message = _(
                 "Сейчас выполняется другая операция. Нажмите «Подключиться», "
@@ -1989,7 +1996,8 @@ class MainWindow(Gtk.ApplicationWindow):
         self.run_async(job, done)
 
     def disconnect(self) -> None:
-        if self.busy:
+        if self.busy_or_excl:
+            self.toast(_("Подождите"), _("Сейчас выполняется другая операция."), error=True)
             return
         if not self.cli.available:
             self._cli_missing()
@@ -2283,7 +2291,7 @@ class MainWindow(Gtk.ApplicationWindow):
         self.run_async(self.cli.version, done, failed)
 
     def refresh_all(self) -> None:
-        if self.busy:
+        if self.busy_or_excl:
             self.toast(_("Подождите"), _("Сейчас выполняется другая операция."), error=True)
             return
         self.hide_banner()
@@ -2298,7 +2306,7 @@ class MainWindow(Gtk.ApplicationWindow):
     # Settings
     # ------------------------------------------------------------------
     def apply_setting(self, key: str, value) -> None:
-        if self.busy:
+        if self.busy_or_excl:
             self.toast(_("Подождите"), _("Сейчас выполняется другая операция."), error=True)
             self.settings_page.populate(
                 self.config, self.store.data.get("prefs", {}),
@@ -2349,7 +2357,7 @@ class MainWindow(Gtk.ApplicationWindow):
         self.run_async(job, done, failed)
 
     def apply_settings_sequence(self, pairs: list[tuple[str, str]]) -> None:
-        if self.busy:
+        if self.busy_or_excl:
             self.toast(_("Подождите"), _("Сейчас выполняется другая операция."), error=True)
             return
         if not self.cli.available:
@@ -2526,7 +2534,7 @@ class MainWindow(Gtk.ApplicationWindow):
         self.run_async(job, done, failed)
 
     def apply_blocklist(self) -> None:
-        if self._blocklist_op or self._excl_op or self.busy:
+        if self._blocklist_op or self.busy_or_excl:
             self.toast(_("Подождите"), _("Сейчас выполняется другая операция."), error=True)
             return
         data = self.blocklist
@@ -2750,6 +2758,8 @@ class MainWindow(Gtk.ApplicationWindow):
     def load_exclusions(self, force: bool = False) -> None:
         if not self.cli.available or self._excl_inflight or self._excl_op:
             return
+        if self._exclusions_loaded and not force:
+            return
         self._excl_inflight = True
         self.exclusions_page.set_busy(True)
 
@@ -2780,7 +2790,7 @@ class MainWindow(Gtk.ApplicationWindow):
         self.run_async(job, done, failed)
 
     def set_exclusion_mode(self, mode: str) -> None:
-        if self._excl_op:
+        if self.busy_or_excl:
             return
         self._excl_op = True
         self.exclusions_page.set_busy(True)
@@ -2837,7 +2847,7 @@ class MainWindow(Gtk.ApplicationWindow):
             if not needs_reconnect(True, status):
                 return
             target = fallback or self.current_location()
-            if target is None or self.busy:
+            if target is None or self.busy_or_excl:
                 self.toast(
                     _("VPN отключён"),
                     _("Нажмите «Подключиться», чтобы восстановить защиту."),
@@ -2879,7 +2889,7 @@ class MainWindow(Gtk.ApplicationWindow):
                     error=True,
                 )
                 return
-            if self.busy:
+            if self.busy_or_excl:
                 self.toast(
                     title,
                     _("VPN отключился. Дождитесь завершения текущей операции и нажмите "
@@ -2895,7 +2905,7 @@ class MainWindow(Gtk.ApplicationWindow):
             self.apply_status(status)
 
     def add_exclusions(self, domains: list[str], mode: str) -> None:
-        if self._excl_op:
+        if self.busy_or_excl:
             return
         was_connected = self.status.connected
         self._excl_op = True
@@ -2934,7 +2944,7 @@ class MainWindow(Gtk.ApplicationWindow):
         self.run_async(job, done, failed)
 
     def remove_exclusion(self, domain: str, mode: str) -> None:
-        if self._excl_op:
+        if self.busy_or_excl:
             return
         was_connected = self.status.connected
         self._excl_op = True
@@ -2981,7 +2991,7 @@ class MainWindow(Gtk.ApplicationWindow):
             _("Очистить"), danger=True,
         ):
             return
-        if self._excl_op:
+        if self.busy_or_excl:
             return
         was_connected = self.status.connected
         self._excl_op = True
@@ -3036,6 +3046,9 @@ class MainWindow(Gtk.ApplicationWindow):
     # Account / maintenance
     # ------------------------------------------------------------------
     def open_login_terminal(self) -> None:
+        if self.busy_or_excl:
+            self.toast(_("Подождите"), _("Сейчас выполняется другая операция."), error=True)
+            return
         prefix = util.terminal_command()
         binary = self.cli.binary or "adguardvpn-cli"
         success_text = _(
@@ -3077,7 +3090,7 @@ class MainWindow(Gtk.ApplicationWindow):
             _("Выйти"), danger=True,
         ):
             return
-        if self.busy:
+        if self.busy_or_excl:
             return
         self.set_busy("account", _("Выполняем выход…"))
 
@@ -3105,7 +3118,7 @@ class MainWindow(Gtk.ApplicationWindow):
         self.run_async(self.cli.logout, done, failed)
 
     def check_updates(self) -> None:
-        if self.busy:
+        if self.busy_or_excl:
             return
         if not self.cli.available:
             self._cli_missing()
@@ -3136,7 +3149,7 @@ class MainWindow(Gtk.ApplicationWindow):
         self.run_async(self.cli.check_update, done, failed)
 
     def update_cli(self) -> None:
-        if self.busy:
+        if self.busy_or_excl:
             self.toast(_("Подождите"), _("Сейчас выполняется другая операция."), error=True)
             return
         if not self.cli.available:
@@ -3171,7 +3184,7 @@ class MainWindow(Gtk.ApplicationWindow):
         self.run_async(self.cli.check_update, checked, check_failed)
 
     def _start_cli_update(self) -> None:
-        if self.busy:
+        if self.busy_or_excl:
             return
         self.cli.reset_askpass_retry_hint()
         self.set_busy("updates", _("Обновляем AdGuard VPN CLI…"))
@@ -3235,7 +3248,7 @@ class MainWindow(Gtk.ApplicationWindow):
                    error=False)
 
     def export_logs(self) -> None:
-        if self.busy:
+        if self.busy_or_excl:
             self.toast(_("Подождите"), _("Сейчас выполняется другая операция."), error=True)
             return
         if not self.cli.available:

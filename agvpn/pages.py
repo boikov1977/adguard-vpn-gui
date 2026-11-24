@@ -814,6 +814,10 @@ class ExclusionsPage(Page):
     def _on_mode_change(self, mode: str) -> None:
         if mode == self._mode:
             return
+        if self.win.busy_or_excl:
+            # The CLI is busy: show the real mode instead of an unsaved one.
+            self.mode_control.set_value(self._mode)
+            return
         self._mode = mode
         self._update_mode_text()
         self.win.set_exclusion_mode(mode)
@@ -991,8 +995,6 @@ class ExclusionsPage(Page):
                 error=True,
             )
             return
-        self._busy = True
-        self._update_controls()
         self.win.add_exclusions(domains, self._mode)
 
     def clear_entry(self) -> None:

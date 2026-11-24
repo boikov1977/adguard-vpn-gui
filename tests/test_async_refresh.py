@@ -30,6 +30,10 @@ class _FakeWindow:
     _alive = True
     _shutting_down = False
 
+    @property
+    def busy_or_excl(self) -> bool:
+        return MainWindow.busy_or_excl.fget(self)
+
     def __init__(self) -> None:
         self._callbacks: list[tuple] = []
         self._status_inflight = False
@@ -47,6 +51,7 @@ class _FakeWindow:
         self.license_loaded = False
         self.license_error = False
         self._exclusions_loaded = True
+        self._excl_op = False
         self._config_inflight = False
         self._config_seq = 0
         self._config_refresh_pending = None
