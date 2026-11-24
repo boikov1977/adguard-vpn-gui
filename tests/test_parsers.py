@@ -122,11 +122,15 @@ class ExclusionsTests(unittest.TestCase):
         # The command itself just prints the header for an empty list.
         text = read("exclusions_empty_ansi.txt")
         self.assertIn("GENERAL", text)
-        # A header-only output and empty input must both yield no locations.
-        self.assertEqual(AdGuardCLI.parse_locations(text), [])
+        cli = AdGuardCLI.__new__(AdGuardCLI)
+        cli._run = mock.Mock(return_value=CliResult(
+            argv=["site-exclusions", "show"], code=0, stdout=text, stderr=""))
+        # The header must be filtered out, not returned as an exclusion.
+        self.assertEqual(cli.exclusions(), [])
+        cli._run.assert_called_once()
+
+    def test_empty_input_has_no_locations(self):
         self.assertEqual(AdGuardCLI.parse_locations(""), [])
-        mode = read("exclusion_mode_ansi.txt")
-        self.assertIn("GENERAL", mode)
 
 
 class ErrorDescriptionTests(unittest.TestCase):
