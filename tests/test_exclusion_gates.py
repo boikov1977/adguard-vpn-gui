@@ -68,7 +68,9 @@ class _FakeWindow:
         # Bind the real gate owners to this stub.
         for name in ("disconnect", "toggle_connection", "load_exclusions",
                      "apply_setting", "refresh_all", "_after_exclusions",
-                     "open_login_terminal", "check_updates", "add_exclusions"):
+                     "open_login_terminal", "check_updates", "add_exclusions",
+                     "remove_exclusion", "confirm_clear_exclusions",
+                     "set_exclusion_mode"):
             setattr(self, name, types.MethodType(getattr(MainWindow, name), self))
 
     @property
@@ -255,6 +257,31 @@ class LateExclusionsAnswerTests(unittest.TestCase):
         self.assertFalse(window._exclusions_loaded)
         window.exclusions_page.set_data.assert_not_called()
         self.assertEqual(window.exclusions, [])
+
+
+class BusyToastTests(unittest.TestCase):
+    """A click on a locked exclusions action must not vanish silently."""
+
+    CASES = (
+        ("add_exclusions", (["a.com"], "general")),
+        ("remove_exclusion", ("a.com", "general")),
+        ("confirm_clear_exclusions", ("general", 3)),
+        ("set_exclusion_mode", ("selective",)),
+    )
+
+    def test_every_busy_action_shows_the_wait_toast(self):
+        for name, args in self.CASES:
+            with self.subTest(action=name):
+                window = _FakeWindow()
+                window.busy = True
+                window.confirm = mock.Mock(return_value=True)
+
+                getattr(window, name)(*args)
+
+                window.toast.assert_called_once()
+                self.assertTrue(window.toast.call_args.kwargs["error"])
+                self.assertFalse(window._excl_op)
+                window.exclusions_page.set_busy.assert_not_called()
 
 
 class ExclusionReloadTests(unittest.TestCase):

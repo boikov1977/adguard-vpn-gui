@@ -2862,6 +2862,7 @@ class MainWindow(Gtk.ApplicationWindow):
 
     def set_exclusion_mode(self, mode: str) -> None:
         if self.busy_or_excl:
+            self.toast(_("Подождите"), _("Сейчас выполняется другая операция."), error=True)
             return
         self._excl_op = True
         self.exclusions_page.set_busy(True)
@@ -2977,6 +2978,7 @@ class MainWindow(Gtk.ApplicationWindow):
 
     def add_exclusions(self, domains: list[str], mode: str) -> None:
         if self.busy_or_excl:
+            self.toast(_("Подождите"), _("Сейчас выполняется другая операция."), error=True)
             return
         was_connected = self.status.connected
         self._excl_op = True
@@ -3016,6 +3018,7 @@ class MainWindow(Gtk.ApplicationWindow):
 
     def remove_exclusion(self, domain: str, mode: str) -> None:
         if self.busy_or_excl:
+            self.toast(_("Подождите"), _("Сейчас выполняется другая операция."), error=True)
             return
         was_connected = self.status.connected
         self._excl_op = True
@@ -3063,6 +3066,7 @@ class MainWindow(Gtk.ApplicationWindow):
         ):
             return
         if self.busy_or_excl:
+            self.toast(_("Подождите"), _("Сейчас выполняется другая операция."), error=True)
             return
         was_connected = self.status.connected
         self._excl_op = True
