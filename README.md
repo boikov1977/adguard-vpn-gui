@@ -49,7 +49,7 @@ Python 3 + GTK3, тёмная тема, трей, графический зап�
 ## Требования
 
 - Linux с GTK3 (проверено на Linux Mint 22.2 Cinnamon).
-- Python 3.10+, PyGObject (`python3-gi`) и Cairo (`python3-cairo`, `python3-gi-cairo`).
+- Python 3.10+, PyGObject (`python3-gi`), GTK 3 typelib (`gir1.2-gtk-3.0`) и Cairo (`python3-cairo`, `python3-gi-cairo`).
 - Официальный `adguardvpn-cli` (AdGuard VPN CLI).
 - Для трея: `gir1.2-ayatanaappindicator3-0.1` (без него приложение работает, но без иконки в лотке).
 
@@ -57,7 +57,7 @@ Python 3 + GTK3, тёмная тема, трей, графический зап�
 
 ```bash
 sudo apt install python3 python3-gi python3-cairo python3-gi-cairo \
-                 gir1.2-ayatanaappindicator3-0.1
+                 gir1.2-gtk-3.0 gir1.2-ayatanaappindicator3-0.1
 ```
 
 ## Установка

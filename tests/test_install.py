@@ -96,6 +96,14 @@ class InstallerTests(unittest.TestCase):
         return self.data / "icons" / "hicolor" / size / "apps" / f"{APP_ID}.{suffix}"
 
     # -- install ---------------------------------------------------------
+    def test_installer_checks_gtk_typelib(self):
+        # Without this the install passes on a host without GTK 3 typelibs and
+        # the application then fails at startup.
+        script = INSTALL.read_text(encoding="utf-8")
+        self.assertIn('require_version("Gtk", "3.0")', script)
+        self.assertIn("from gi.repository import Gtk", script)
+        self.assertIn("gir1.2-gtk-3.0", script)
+
     def test_install_no_desktop_then_uninstall(self):
         result = self.run_script(INSTALL, "--no-desktop")
         self.assertEqual(result.returncode, 0, result.stderr)
