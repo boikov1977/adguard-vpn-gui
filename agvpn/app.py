@@ -1514,7 +1514,10 @@ class MainWindow(Gtk.ApplicationWindow):
         parts = [part.strip().lower() for part in status.location.split(",")]
         last = self.store.last_location or {}
         last_city = (last.get("city") or "").lower()
-        if last_city and last_city in parts:
+        last_country = (last.get("country") or "").lower()
+        if last_city and last_city in parts and (
+            not last_country or last_country in parts or "," not in status.location
+        ):
             return
         for loc in self.locations:
             if loc.city.lower() in parts and (

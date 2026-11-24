@@ -82,6 +82,16 @@ class StatusLocationMatchTests(unittest.TestCase):
         call = win.remember("New York, United States")
         call.assert_not_called()
 
+    def test_last_city_in_another_country_is_remembered(self):
+        # Same city name, another country: the stored country must be updated.
+        win = _Window(
+            [loc("DE", "Springfield", "Germany"),
+             loc("US", "Springfield", "United States", 31)],
+            last={"iso": "DE", "country": "Germany", "city": "Springfield"},
+        )
+        call = win.remember("Springfield, United States")
+        call.assert_called_once_with("US", "United States", "Springfield", 31)
+
     def test_last_city_substring_is_not_already_remembered(self):
         win = _Window(
             [loc("US", "New York", "United States")],
