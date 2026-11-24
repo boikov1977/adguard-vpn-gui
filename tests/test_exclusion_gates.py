@@ -15,7 +15,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
 from agvpn.app import MainWindow  # noqa: E402
-from agvpn.cli import License, Location, VpnStatus  # noqa: E402
+from agvpn.cli import CliError, License, Location, VpnStatus  # noqa: E402
 from agvpn.pages import ExclusionsPage  # noqa: E402
 
 
@@ -216,6 +216,19 @@ class _QueuedWindow(_FakeWindow):
         on_success, _on_error = self._callbacks.pop(index)
         on_success(mock.Mock() if payload is None else payload)
 
+    def deliver_error(self, index: int = 0, error: Exception | None = None) -> None:
+        _on_success, on_error = self._callbacks.pop(index)
+        on_error(error or CliError("session expired", kind="not_logged_in"))
+
+    def logout(self) -> None:
+        """Queue a logout; ``deliver(1)`` then finishes it."""
+        self.refresh_license = mock.Mock()
+        self.refresh_status = mock.Mock()
+        self.locations_page = mock.Mock()
+        self.confirm = mock.Mock(return_value=True)
+        self.confirm_logout = types.MethodType(MainWindow.confirm_logout, self)
+        self.confirm_logout()
+
 
 class LateExclusionsAnswerTests(unittest.TestCase):
     def test_late_load_does_not_restore_the_previous_account(self):
@@ -223,12 +236,7 @@ class LateExclusionsAnswerTests(unittest.TestCase):
         window.load_exclusions()      # the read of the logged-in account
         self.assertTrue(window._excl_inflight)
 
-        window.refresh_license = mock.Mock()
-        window.refresh_status = mock.Mock()
-        window.locations_page = mock.Mock()
-        window.confirm = mock.Mock(return_value=True)
-        window.confirm_logout = types.MethodType(MainWindow.confirm_logout, window)
-        window.confirm_logout()       # queues the logout
+        window.logout()
         window.deliver(1)             # logout finished: the list was reset
         self.assertFalse(window._exclusions_loaded)
         self.assertFalse(window._excl_inflight)
@@ -238,6 +246,42 @@ class LateExclusionsAnswerTests(unittest.TestCase):
         self.assertFalse(window._excl_inflight)
         window.exclusions_page.set_data.assert_not_called()
         self.assertEqual(window.exclusions, [])
+
+    def test_reset_unlocks_the_page_when_a_load_was_in_flight(self):
+        window = _QueuedWindow()
+        page = _page(window)
+        page.set_busy = types.MethodType(ExclusionsPage.set_busy, page)
+        page.set_data = mock.Mock()
+        window.exclusions_page = page
+
+        window.load_exclusions()
+        self.assertTrue(page._busy)   # "Добавляем…", controls disabled
+
+        window.logout()
+        window.deliver(1)             # the stale answer will never arrive
+
+        self.assertFalse(page._busy)
+        self.assertFalse(window._excl_inflight)
+
+    def test_stale_failure_after_reset_is_not_shown(self):
+        window = _QueuedWindow()
+        page = _page(window)
+        page.set_busy = types.MethodType(ExclusionsPage.set_busy, page)
+        page.set_data = mock.Mock()
+        window.exclusions_page = page
+        window.show_error = mock.Mock()
+        window._last_page = "exclusions"
+
+        window.load_exclusions()
+        window.logout()
+        window.deliver(1)             # logout finished: the list was reset
+        self.assertFalse(page._busy)
+
+        window.deliver_error(0)       # late failure of the old account
+
+        window.show_error.assert_not_called()
+        page.set_data.assert_not_called()
+        self.assertFalse(window._excl_inflight)
 
     def test_late_load_does_not_restore_an_expired_session(self):
         window = _QueuedWindow()

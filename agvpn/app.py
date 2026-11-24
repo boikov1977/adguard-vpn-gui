@@ -2203,6 +2203,9 @@ class MainWindow(Gtk.ApplicationWindow):
                 # A read already in flight belongs to the previous account:
                 # bump the generation so its answer is dropped.
                 self._excl_seq += 1
+                if self._excl_inflight and not self._excl_op:
+                    # That answer no longer clears the page, so unlock it here.
+                    self.exclusions_page.set_busy(False)
                 self._excl_inflight = False
                 self._update_exclusion_badge()
             self._maybe_autoconnect()
@@ -3188,6 +3191,9 @@ class MainWindow(Gtk.ApplicationWindow):
             # A read already in flight belongs to the previous account: bump
             # the generation so its answer is dropped.
             self._excl_seq += 1
+            if self._excl_inflight and not self._excl_op:
+                # That answer no longer clears the page, so unlock it here.
+                self.exclusions_page.set_busy(False)
             self._excl_inflight = False
             self._update_exclusion_badge()
 
