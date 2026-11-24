@@ -141,6 +141,7 @@ class _FakeWindow:
         self.show_error = mock.Mock()
         self._update_location_widgets = mock.Mock()
         self._rebuild_tray_locations = mock.Mock()
+        self._maybe_autoconnect = mock.Mock()
 
     def run_async(self, job, done=None, failed=None) -> None:
         try:

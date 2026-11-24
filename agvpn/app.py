@@ -64,6 +64,13 @@ STATUS_POLL_HIDDEN_MS = 120_000
 STATUS_EVENT_DEBOUNCE_MS = 400
 STATUS_WATCHED_FILES = frozenset({"vpn.pid", "vpn.socket"})
 
+# Startup autoconnect waits for the initial data (status, license, locations).
+# The slowest parallel prerequisite is ``list-locations`` (60 s timeout), so the
+# deadline covers it with a margin for a slow CLI start; after that the user is
+# expected to press "Connect" manually.
+AUTOCONNECT_TIMEOUT_SECONDS = 90
+AUTOCONNECT_RETRY_MS = 1_000
+
 
 def status_poll_interval_ms(hidden: bool) -> int:
     """Fallback status poll interval for a visible or tray-hidden window."""
@@ -401,7 +408,10 @@ class MainWindow(Gtk.ApplicationWindow):
         self._op_id = 0
         self._op_cancel: threading.Event | None = None
         self._auto_connect_done = False
-        self._auto_connect_attempts = 0
+        # ``time.monotonic()`` seconds: a system clock jump must not
+        # extend or cut the startup wait.
+        self._auto_connect_deadline: float | None = None
+        self._auto_connect_scheduled = False
         self.tray_available = False
         self._indicator = None
         self._tray_toggle = None
@@ -953,24 +963,43 @@ class MainWindow(Gtk.ApplicationWindow):
         self._load_cli_version()
         if not self.locations or not self.loc_cache.fresh:
             self.refresh_locations(silent=True)
-        GLib.timeout_add(1200, self._maybe_autoconnect)
+        self._schedule_autoconnect(1200)
         return False
 
     # ------------------------------------------------------------------
     # Autostart connection
     # ------------------------------------------------------------------
+    def _schedule_autoconnect(self, delay_ms: int) -> None:
+        """Arm one autoconnect check; late callbacks may ask for it often."""
+        if self._auto_connect_scheduled or self._auto_connect_done:
+            return
+        self._auto_connect_scheduled = True
+        GLib.timeout_add(delay_ms, self._autoconnect_tick)
+
+    def _autoconnect_tick(self) -> bool:
+        self._auto_connect_scheduled = False
+        self._maybe_autoconnect()
+        return False
+
     def _retry_autoconnect(self) -> bool:
-        if self._auto_connect_attempts >= 10:
-            self._auto_connect_done = True
-            log.info("Autoconnect skipped: data did not become ready in time")
-            return False
-        self._auto_connect_attempts += 1
-        GLib.timeout_add(1000, self._maybe_autoconnect)
+        # The deadline itself is checked at the top of ``_maybe_autoconnect``;
+        # this only arms the next check.
+        self._schedule_autoconnect(AUTOCONNECT_RETRY_MS)
         return False
 
     def _maybe_autoconnect(self) -> bool:
         """Connect once on startup when the user asked for it."""
         if (self._auto_connect_done or self._shutting_down or not self._alive):
+            return False
+        if self._auto_connect_deadline is None:
+            self._auto_connect_deadline = (
+                time.monotonic() + AUTOCONNECT_TIMEOUT_SECONDS
+            )
+        elif time.monotonic() >= self._auto_connect_deadline:
+            # Startup data never became ready (or arrived too late): the
+            # connect must not happen minutes after launch.
+            self._auto_connect_done = True
+            log.info("Autoconnect skipped: startup data did not become ready in time")
             return False
         if not self.store.pref("connect_on_start", False):
             self._auto_connect_done = True
@@ -1379,6 +1408,7 @@ class MainWindow(Gtk.ApplicationWindow):
             self.apply_status(status)
             self._schedule_status_poll()
             self._schedule_pending_status_event()
+            self._maybe_autoconnect()
         self._run_pending_status()
 
     def _status_error(self, err: Exception, initial: bool, seq: int) -> None:
@@ -2151,6 +2181,7 @@ class MainWindow(Gtk.ApplicationWindow):
             if not license_obj.logged_in:
                 self._exclusions_loaded = False
                 self._update_exclusion_badge()
+            self._maybe_autoconnect()
         self._run_pending_license()
 
     def _license_error(self, err: Exception, initial: bool, seq: int) -> None:
@@ -2273,6 +2304,7 @@ class MainWindow(Gtk.ApplicationWindow):
             self.dashboard.refresh()
             self._update_location_widgets()
             self._rebuild_tray_locations()
+            self._maybe_autoconnect()
 
         self.run_async(self.cli.list_locations, done, failed)
 

@@ -62,6 +62,7 @@ class _FakeWindow:
             return_value=Location("FI", "Finland", "Helsinki"))
         self._start_connect = mock.Mock()
         self._update_exclusion_badge = mock.Mock()
+        self._maybe_autoconnect = mock.Mock()
         self._location_name = MainWindow._location_name
         # Bind the real gate owners to this stub.
         for name in ("disconnect", "toggle_connection", "load_exclusions",

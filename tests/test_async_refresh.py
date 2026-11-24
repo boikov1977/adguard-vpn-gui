@@ -96,6 +96,7 @@ class _FakeWindow:
         self.toast = mock.Mock()
         self._update_account_chip = mock.Mock()
         self._update_exclusion_badge = mock.Mock()
+        self._maybe_autoconnect = mock.Mock()
         self._update_exclusion_dns_hint = mock.Mock()
         # Bind the real refresh paths to this stub: they call each other.
         for name in (
