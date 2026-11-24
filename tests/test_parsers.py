@@ -121,8 +121,10 @@ class ExclusionsTests(unittest.TestCase):
     def test_empty(self):
         # The command itself just prints the header for an empty list.
         text = read("exclusions_empty_ansi.txt")
-        lines = [ln for ln in AdGuardCLI.parse_locations("") ]
-        self.assertEqual(lines, [])
+        self.assertIn("GENERAL", text)
+        # A header-only output and empty input must both yield no locations.
+        self.assertEqual(AdGuardCLI.parse_locations(text), [])
+        self.assertEqual(AdGuardCLI.parse_locations(""), [])
         mode = read("exclusion_mode_ansi.txt")
         self.assertIn("GENERAL", mode)
 
