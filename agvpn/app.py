@@ -1490,14 +1490,17 @@ class MainWindow(Gtk.ApplicationWindow):
     def _maybe_remember_status_location(self, status: VpnStatus) -> None:
         if not status.location:
             return
-        text = status.location.lower()
+        # The CLI prints "City, Country" (or just "City" once the mode note is
+        # stripped).  Compare whole comma-separated parts: a substring match
+        # would remember "York" for "New York, United States".
+        parts = [part.strip().lower() for part in status.location.split(",")]
         last = self.store.last_location or {}
         last_city = (last.get("city") or "").lower()
-        if last_city and last_city in text:
+        if last_city and last_city in parts:
             return
         for loc in self.locations:
-            if loc.city.lower() in text and (
-                not loc.country or loc.country.lower() in text or "," not in text
+            if loc.city.lower() in parts and (
+                not loc.country or loc.country.lower() in parts or "," not in status.location
             ):
                 self.store.set_last_location(loc.iso, loc.country, loc.city, loc.ping)
                 return
