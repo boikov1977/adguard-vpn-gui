@@ -114,7 +114,7 @@ def _window_dimension(value: Any, default: int) -> int:
         return default
     try:
         number = int(value)
-    except (TypeError, ValueError):
+    except (TypeError, ValueError, OverflowError):
         return default
     if number <= 0:
         return default
@@ -127,7 +127,7 @@ def _window_coord(value: Any) -> int | None:
         return None
     try:
         number = int(value)
-    except (TypeError, ValueError):
+    except (TypeError, ValueError, OverflowError):
         return None
     if abs(number) > _WINDOW_MAX_COORD:
         return None
@@ -153,6 +153,74 @@ def _normalise_window(raw: Any) -> dict[str, Any]:
     }
 
 
+def _normalise_prefs(raw: Any) -> dict[str, Any]:
+    """Return a prefs dict; corrupt known keys fall back to their defaults."""
+    prefs = dict(DEFAULT_PREFS)
+    if not isinstance(raw, dict):
+        return prefs
+    for key, value in raw.items():
+        if not isinstance(key, str):
+            continue
+        if key in DEFAULT_PREFS:
+            prefs[key] = value if isinstance(value, bool) else DEFAULT_PREFS[key]
+        else:
+            prefs[key] = value
+    return prefs
+
+
+def _normalise_last_location(raw: Any) -> dict | None:
+    """Keep a usable last location: text fields plus an integer ping.
+
+    Unknown fields are dropped (the schema is fixed, like activity entries).  A
+    field of the wrong type becomes ``None`` instead of dropping the whole
+    record, so readers such as ``last.get("city").lower()`` never see a list.
+    """
+    if not isinstance(raw, dict):
+        return None
+    iso = raw.get("iso")
+    country = raw.get("country")
+    city = raw.get("city")
+    ping = raw.get("ping")
+    if isinstance(ping, bool) or not isinstance(ping, (int, float)):
+        ping = None
+    else:
+        try:
+            ping = int(ping)
+        except (TypeError, ValueError, OverflowError):
+            ping = None
+    return {
+        "iso": _clean_text(iso) if isinstance(iso, str) else None,
+        "country": _clean_text(country) if isinstance(country, str) else None,
+        "city": _clean_text(city) if isinstance(city, str) else None,
+        "ping": ping,
+    }
+
+
+def _sanitise_activity(raw: Any) -> list[dict]:
+    """Keep only well-formed activity entries, newest last.
+
+    A hand-edited file may contain ``null`` or plain strings in the list; the
+    UI reads ``item.get(...)`` directly, so those entries are dropped here once
+    instead of being handled in every reader.
+    """
+    if not isinstance(raw, list):
+        return []
+    result: list[dict] = []
+    for item in raw:
+        if not isinstance(item, dict):
+            continue
+        ts = _timestamp(item.get("ts"))
+        if ts is None:
+            continue
+        result.append({
+            "ts": ts,
+            "kind": str(item.get("kind") or ""),
+            "title": str(item.get("title") or ""),
+            "subtitle": str(item.get("subtitle") or ""),
+        })
+    return result[-40:]
+
+
 class StateStore:
     def __init__(self) -> None:
         self.path = util.CONFIG_DIR / "state.json"
@@ -174,12 +242,11 @@ class StateStore:
             pass
         except Exception:
             util.get_logger("state").warning("Could not read state file", exc_info=True)
-        if not isinstance(data.get("activity"), list):
-            data["activity"] = []
-        data["activity"] = data["activity"][-40:]
-        prefs = data.setdefault("prefs", {})
-        for key, value in DEFAULT_PREFS.items():
-            prefs.setdefault(key, value)
+        data["window"] = _normalise_window(data.get("window"))
+        data["prefs"] = _normalise_prefs(data.get("prefs"))
+        data["activity"] = _sanitise_activity(data.get("activity"))
+        data["last_location"] = _normalise_last_location(data.get("last_location"))
+        data["first_close_hint_shown"] = bool(data.get("first_close_hint_shown"))
         data["favorites"] = _sanitise_keys(data.get("favorites"), MAX_FAVORITES)
         data["recent"] = _sanitise_keys(data.get("recent"), MAX_RECENT)
         data["connected_since"] = _timestamp(data.get("connected_since"))
