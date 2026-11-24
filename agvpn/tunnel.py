@@ -222,9 +222,9 @@ class EndpointCache:
     The UI polls this often while the CLI keeps appending DNS/status noise, so
     only bytes added since the previous call are read.  A full tail scan (up to
     ``MAX_SCAN_BYTES``) happens only on the first call, after truncation or
-    rotation, and when ``invalidate()`` asks for a fresh answer.  If new data
+    rotation, and when the read offset is no longer trustworthy.  If new data
     contains no ``Using endpoint`` line, the previously cached endpoint is
-    kept.
+    kept — except after :meth:`invalidate`, which drops it.
     """
 
     def __init__(self, path: str | Path | None = None) -> None:
@@ -243,13 +243,17 @@ class EndpointCache:
         return self._path if self._path is not None else default_log_path()
 
     def invalidate(self) -> None:
-        """Force the next ``get()`` to look for the current endpoint.
+        """Drop the cached endpoint until a fresh record is parsed.
 
-        The read offset is deliberately kept: after a normal connect the new
-        record is in the appended bytes, so the next call can still be cheap.
+        Called when the tunnel connects to another location.  Returning the
+        previous tunnel's endpoint would attribute its ping to the new
+        location, so ``get()`` answers ``None`` until a new ``Using endpoint``
+        line appears.  The read offset is deliberately kept: the fresh record
+        is in the appended bytes, so the next call can still be cheap.
         """
         with self._lock:
-            self._force_rescan = True
+            self._value = None
+            self._force_rescan = False
 
     def _reset(self) -> None:
         self._inode = None

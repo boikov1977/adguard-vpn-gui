@@ -203,8 +203,9 @@ class TunnelLogParsingTests(unittest.TestCase):
             second = cache.get()
             self.assertIsNotNone(second)
             self.assertEqual(second.name, "cache-40.example.net")
+            # No new record yet: the previous tunnel must not be reported.
             cache.invalidate()
-            self.assertEqual(cache.get().name, "cache-40.example.net")
+            self.assertIsNone(cache.get())
 
 
 class DeepEndpointScanTests(unittest.TestCase):
@@ -405,7 +406,7 @@ class EndpointCacheIncrementalTests(unittest.TestCase):
             self.assertIsNotNone(endpoint)
             self.assertEqual(endpoint.name, "new.example")
 
-    def test_invalidate_forces_a_fresh_scan(self):
+    def test_invalidate_drops_stale_value_until_new_record(self):
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp) / "tunnel.log"
             path.write_text(endpoint_line("old.example", 11), encoding="utf-8")
@@ -417,9 +418,19 @@ class EndpointCacheIncrementalTests(unittest.TestCase):
                 wraps=tunnel.read_last_endpoint,
             ) as scan:
                 cache.invalidate()
+                # The old endpoint must not be attributed to the new location.
+                self.assertIsNone(cache.get())
+                with open(path, "a", encoding="utf-8") as handle:
+                    handle.write(noise(3))
+                self.assertIsNone(cache.get())
+                with open(path, "a", encoding="utf-8") as handle:
+                    handle.write(endpoint_line("new.example", 42))
                 endpoint = cache.get()
-            self.assertEqual(scan.call_count, 1)
-            self.assertEqual(endpoint.name, "old.example")
+            # Only the appended bytes are read: no full rescan of the old log.
+            self.assertEqual(scan.call_count, 0)
+            self.assertIsNotNone(endpoint)
+            self.assertEqual(endpoint.name, "new.example")
+            self.assertEqual(endpoint.ping, 42)
 
 
 class PingFormattingTests(unittest.TestCase):
